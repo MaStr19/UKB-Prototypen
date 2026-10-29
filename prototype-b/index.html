@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EVA-Protokoll 5.26 – GIZ Bonn (Prototyp B: Guided Flow)</title>
+<style>
+  :root {
+    --primary: #1e3a8a;
+    --primary-light: #3b82f6;
+    --primary-dark: #172554;
+    --bg-page: #f1f5f9;
+    --bg-card: #ffffff;
+    --border-ui: #cbd5e1;
+    --text-ui: #0f172a;
+    --text-muted: #64748b;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --sidebar-bg: #0f172a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 12px; }
+
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-ui);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* TOP HEADER */
+  header {
+    background: #1e293b;
+    color: #fff;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #0f172a;
+    flex-shrink: 0;
+  }
+  .app-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .badge-mode {
+    background: #0284c7;
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .btn-top {
+    background: #334155;
+    color: #f8fafc;
+    border: 1px solid #475569;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-top:hover { background: #475569; }
+  .btn-top.btn-accent { background: #059669; border-color: #10b981; }
+  .btn-top.btn-accent:hover { background: #10b981; }
+
+  /* CALL STATUS BAR */
+  .call-bar {
+    background: #e2e8f0;
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--border-ui);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #334155;
+    flex-shrink: 0;
+  }
+  .call-timer {
+    background: #0f172a;
+    color: #38bdf8;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+  }
+
+  /* STEPPER PROGRESS BAR */
+  .stepper-nav {
+    background: #fff;
+    display: flex;
+    border-bottom: 2px solid #e2e8f0;
+    overflow-x: auto;
+    flex-shrink: 0;
+  }
+  .step-tab {
+    flex: 1;
+    min-width: 130px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-right: 1px solid #e2e8f0;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    position: relative;
+    background: #f8fafc;
+  }
+  .step-tab:hover { background: #f1f5f9; }
+  .step-tab.active {
+    background: #ffffff;
+    border-bottom: 3px solid #2563eb;
+    font-weight: 700;
+    color: #1d4ed8;
+  }
+  .step-tab.completed .step-num {
+    background: #10b981;
+    color: white;
+  }
+  .step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-tab.active .step-num {
+    background: #2563eb;
+    color: white;
+  }
+  .step-label {
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  /* MAIN WORKSPACE: WIZARD BODY + SIDEBAR */
+  .workspace-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .step-content-pane {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+  }
+
+  .card-container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    max-width: 960px;
+    margin: 0 auto 20px auto;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-title .hint {
+    font-size: 11px;
+    font-weight: normal;
+    color: var(--text-muted);
+  }
+
+  /* FORM CONTROLS */
+  .form-group {
+    margin-bottom: 12px;
+  }
+  .form-group label.field-label {
+    display: block;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 4px;
+    font-size: 11.5px;
+  }
+  .form-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .col-1 { flex: 1; }
+  .col-2 { flex: 2; }
+  .col-3 { flex: 3; }
+
+  input[type="text"], input[type="number"], input[type="time"], input[type="date"], textarea, select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 11.5px;
+    color: #0f172a;
+    background: #fff;
+    outline: none;
+    transition: all 0.15s;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+  textarea { resize: vertical; }
+
+  .checkbox-group, .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+  }
+  label.pill-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    user-select: none;
+    transition: 0.15s;
+  }
+  label.pill-check:hover { background: #f1f5f9; }
+  label.pill-check input { accent-color: #2563eb; }
+  label.pill-check:has(input:checked) {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+    font-weight: 600;
+  }
+
+  /* PERSISTENT SUMMARY SIDEBAR */
+  .summary-sidebar {
+    width: 320px;
+    background: var(--sidebar-bg);
+    color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #334155;
+    flex-shrink: 0;
+  }
+  .sidebar-header {
+    padding: 10px 14px;
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #94a3b8;
+  }
+  .sidebar-body {
+    padding: 12px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .summary-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 5px;
+    padding: 8px 10px;
+  }
+  .summary-card-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #38bdf8;
+    font-weight: 700;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 2px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .summary-line {
+    font-size: 11px;
+    color: #cbd5e1;
+    margin-bottom: 2px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .summary-line strong {
+    color: #ffffff;
+    font-weight: 600;
+  }
+  .pss-badge-large {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 800;
+    font-size: 12px;
+    text-align: center;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  /* BOTTOM NAVIGATION BAR */
+  .bottom-nav {
+    background: #ffffff;
+    border-top: 1px solid #cbd5e1;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .btn-nav {
+    padding: 7px 16px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-nav:hover { background: #e2e8f0; }
+  .btn-nav.btn-primary {
+    background: #2563eb;
+    color: white;
+    border-color: #1d4ed8;
+  }
+  .btn-nav.btn-primary:hover { background: #1d4ed8; }
+  .btn-nav.btn-success {
+    background: #059669;
+    color: white;
+    border-color: #047857;
+  }
+  .btn-nav.btn-success:hover { background: #047857; }
+
+  /* PSS Interactive Selector */
+  .pss-picker {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .pss-choice {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 4px;
+    border: 1.5px solid #cbd5e1;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 13px;
+    background: #f8fafc;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .pss-choice:hover { border-color: #94a3b8; }
+  .pss-choice.selected-0 { background: #10b981; color: white; border-color: #059669; }
+  .pss-choice.selected-1 { background: #f59e0b; color: white; border-color: #d97706; }
+  .pss-choice.selected-2 { background: #f97316; color: white; border-color: #ea580c; }
+  .pss-choice.selected-3 { background: #ef4444; color: white; border-color: #dc2626; }
+  .pss-choice.selected-4 { background: #0f172a; color: white; border-color: #000000; }
+  .pss-choice.selected-u { background: #64748b; color: white; border-color: #475569; }
+
+  /* Substance matrix in Step 3 */
+  .subst-row {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  .subst-flags {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .flag-chip {
+    padding: 2px 6px;
+    border: 1px solid #cbd5e1;
+    border-radius: 3px;
+    font-size: 9.5px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #ffffff;
+    user-select: none;
+  }
+  .flag-chip.active {
+    background: #1e293b;
+    color: white;
+    border-color: #0f172a;
+  }
+
+  .status-toast {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a;
+    color: #38bdf8;
+    border: 1px solid #38bdf8;
+    padding: 8px 20px;
+    border-radius: 6px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    font-weight: 600;
+    z-index: 2000;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="app-brand">
+    <span>GIZ Bonn &bull; Notruf-Dokumentation</span>
+    <span class="badge-mode">Prototyp B: Guided Flow (Wizard)</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn-top btn-accent" onclick="loadSampleCase()" title="Alt+L">⚡ Beispielfall (Jugendliche Paracetamol) <span style="font-size: 9px; opacity: 0.8;">[Alt+L]</span></button>
+    <button class="btn-top" onclick="resetForm()" title="Alt+R">🗑️ Reset <span style="font-size: 9px; opacity: 0.8;">[Alt+R]</span></button>
+    <button class="btn-top" onclick="window.print()">🖨️ Drucken</button>
+  </div>
+</header>
+
+<div class="call-bar">
+  <div style="display: flex; gap: 15px; align-items: center;">
+    <span>Berater/in: <strong id="topBerater">Petra Förster</strong></span>
+    <span>AZ: <strong id="topAz">BN-2026-10493</strong></span>
+    <span>Typ: <strong id="topAnrufArt">Anfrage (Erstkontakt)</strong></span>
+  </div>
+  <div style="display: flex; gap: 10px; align-items: center;">
+    <span>Gesprächsdauer:</span>
+    <span class="call-timer" id="callTimer">03:42</span>
+  </div>
+</div>
+
+<!-- STEPPER NAVIGATION -->
+<div class="stepper-nav" id="stepperNav">
+  <div class="step-tab active" onclick="goToStep(1)" id="stepTab-1">
+    <div class="step-num">1</div>
+    <div class="step-label">1. Anrufer & Quellen</div>
+  </div>
+  <div class="step-tab" onclick="goToStep(2)" id="stepTab-2">
+    <div class="step-num">2</div>
+    <div class="step-label">2. Patient</div>
+  </div>
+  <div class="step-tab" onclick="goToStep(3)" id="stepTab-3">
+    <div class="step-num">3</div>
+    <div class="step-label">3. Exposition / Noxe</div>
+  </div>
+  <div class="step-tab" onclick="goToStep(4)" id="stepTab-4">
+    <div class="step-num">4</div>
+    <div class="step-label">4. Anamnese</div>
+  </div>
+  <div class="step-tab" onclick="goToStep(5)" id="stepTab-5">
+    <div class="step-num">5</div>
+    <div class="step-label">5. Befunde / Vitals</div>
+  </div>
+  <div class="step-tab" onclick="goToStep(6)" id="stepTab-6">
+    <div class="step-num">6</div>
+    <div class="step-label">6. Maßnahmen</div>
+  </div>
+  <div class="step-tab" onclick="goToStep(7)" id="stepTab-7">
+    <div class="step-num">7</div>
+    <div class="step-label">7. Bewertung / PSS</div>
+  </div>
+</div>
+
+<div class="workspace-layout">
+
+  <!-- STEP CONTENT PANE -->
+  <div class="step-content-pane">
+
+    <!-- STEP 1: ANRUFER & QUELLEN -->
+    <div class="card-container" id="stepContent-1">
+      <div class="card-title">
+        <span>Schritt 1: Anrufer-Identifikation & Dokument-Kopf</span>
+        <span class="hint">Erfassung von Berater, Anrufertyp und Rückrufnummer</span>
+      </div>
+
+      <div class="form-row">
+        <div class="col-1 form-group">
+          <label class="field-label">Berater/in (Name/Vorname, Nr.)</label>
+          <input type="text" id="b_berater" value="Petra Förster" oninput="syncSummary()">
+        </div>
+        <div class="col-1 form-group">
+          <label class="field-label">Aktenzeichen (AZ)</label>
+          <input type="text" id="b_az" value="BN-2026-10493" style="font-weight: 700; color: #1e3a8a;" oninput="syncSummary()">
+        </div>
+        <div class="col-1 form-group">
+          <label class="field-label">Anruf-Typ & Flags</label>
+          <div class="checkbox-group" style="margin-top: 4px;">
+            <label class="pill-check"><input type="radio" name="b_anrufart" value="Anfrage" checked onchange="syncSummary()"> Anfrage</label>
+            <label class="pill-check"><input type="radio" name="b_anrufart" value="Folgeanruf" onchange="syncSummary()"> Folgeanruf</label>
+            <label class="pill-check"><input type="checkbox" id="b_tier" onchange="syncSummary()"> Tier</label>
+            <label class="pill-check"><input type="checkbox" id="b_fub"> FU-B</label>
+            <label class="pill-check"><input type="checkbox" id="b_futel"> FU-Tel</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 10px;">
+        <label class="field-label">Anrufer-Kategorie (Triage-Ebene)</label>
+        <div class="checkbox-group">
+          <label class="pill-check"><input type="radio" name="b_anrufer_typ" value="Laie" onchange="syncSummary()"> Laie</label>
+          <label class="pill-check"><input type="radio" name="b_anrufer_typ" value="Klinik / KH" checked onchange="syncSummary()"> Klinik / KH</label>
+          <label class="pill-check"><input type="radio" name="b_anrufer_typ" value="Praxis" onchange="syncSummary()"> Praxis</label>
+          <label class="pill-check"><input type="radio" name="b_anrufer_typ" value="RTW" onchange="syncSummary()"> RTW</label>
+          <label class="pill-check"><input type="radio" name="b_anrufer_typ" value="Notarzt" onchange="syncSummary()"> Notarzt</label>
+          <label class="pill-check"><input type="radio" name="b_anrufer_typ" value="KV-Notdienst" onchange="syncSummary()"> KV-Notdienst</label>
+          <label class="pill-check"><input type="radio" name="b_anrufer_typ" value="Leitstelle" onchange="syncSummary()"> Leitstelle</label>
+          <label class="pill-check"><input type="radio" name="b_anrufer_typ" value="Veterinär" onchange="syncSummary()"> Veterinär</label>
+          <label class="pill-check">Sonstige: <input type="text" id="b_anrufer_sonst" style="width: 100px; padding: 2px;" oninput="syncSummary()"></label>
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-top: 10px;">
+        <div class="col-2 form-group">
+          <label class="field-label">Name des Anrufers / Ansprechpartners</label>
+          <div style="display: flex; gap: 8px;">
+            <select id="b_anrede" style="width: 80px;" onchange="syncSummary()">
+              <option value="Frau">Frau</option>
+              <option value="Herr">Herr</option>
+            </select>
+            <input type="text" id="b_anrufer_name" placeholder="Dr. med. Weber, Thomas (Diensthabender ZNA)" oninput="syncSummary()">
+          </div>
+        </div>
+        <div class="col-2 form-group">
+          <label class="field-label">Rückruf-Telefon / E-Mail (Lebenswichtig)</label>
+          <input type="text" id="b_anrufer_tel" placeholder="0228-287-12345 (ZNA Übergabeplatz)" style="font-weight: 700;" oninput="syncSummary()">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">PLZ / Ort / Klinik / Krankenhaus / ggf. Land</label>
+        <input type="text" id="b_anrufer_ort" placeholder="Universitätsklinikum Bonn, Venusberg-Campus 1" oninput="syncSummary()">
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">Fachabteilung (bei Klinikanrufern)</label>
+        <div class="checkbox-group">
+          <label class="pill-check"><input type="checkbox" id="b_abt_innere"> Innere</label>
+          <label class="pill-check"><input type="checkbox" id="b_abt_psych"> Psychiatrie</label>
+          <label class="pill-check"><input type="checkbox" id="b_abt_zna" checked> ZNA</label>
+          <label class="pill-check"><input type="checkbox" id="b_abt_its"> Intensiv</label>
+          <label class="pill-check"><input type="checkbox" id="b_abt_paed"> Kinderklinik/Pädiatrie</label>
+          <label class="pill-check"><input type="checkbox" id="b_abt_chir"> Chirurgie</label>
+          <label class="pill-check"><input type="checkbox" id="b_abt_darzt"> D-Arzt</label>
+          <label class="pill-check">Sonstige: <input type="text" id="b_abt_sonst" style="width: 80px; padding: 2px;"></label>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 14px; background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
+        <label class="field-label">Konsultierte Quellen / Recherchenachweise</label>
+        <div class="checkbox-group">
+          <label class="pill-check"><input type="checkbox" id="b_q_bonntox" checked> BonnTox</label>
+          <label class="pill-check"><input type="checkbox" id="b_q_muehlendahl"> Mühlendahl</label>
+          <label class="pill-check"><input type="checkbox" id="b_q_poisindex" checked> Poisindex</label>
+          <label class="pill-check"><input type="checkbox" id="b_q_toxinz"> Toxinz</label>
+          <label class="pill-check"><input type="checkbox" id="b_q_gestis"> GESTIS</label>
+          <label class="pill-check"><input type="checkbox" id="b_q_tdi"> TDI</label>
+          <label class="pill-check"><input type="checkbox" id="b_q_sdb"> SDB</label>
+          <label class="pill-check"><input type="checkbox" id="b_q_eva" checked> EVA</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: PATIENT -->
+    <div class="card-container" id="stepContent-2" style="display: none;">
+      <div class="card-title">
+        <span>Schritt 2: Patientendaten & Biometrie</span>
+        <span class="hint">Patientenidentifikation, Alter, Schwangerschaft und Gewicht</span>
+      </div>
+
+      <div class="form-row">
+        <div class="col-2 form-group">
+          <label class="field-label">Patient Name, Vorname oder Tierart</label>
+          <input type="text" id="b_pat_name" placeholder="z. B. Becker, Julia" style="font-size: 13px; font-weight: 600;" oninput="syncSummary()">
+        </div>
+        <div class="col-1 form-group">
+          <label class="field-label">Fall-Nr. (Klinik / PID)</label>
+          <input type="text" id="b_pat_fallnr" placeholder="z. B. 4088921">
+        </div>
+        <div class="col-1 form-group">
+          <label class="field-label">Geburtsdatum</label>
+          <input type="date" id="b_pat_geb" onchange="autoCalcAgeWizard()">
+        </div>
+      </div>
+
+      <div class="form-row" style="background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
+        <div class="col-1 form-group">
+          <label class="field-label">Alter & Einheit</label>
+          <div style="display: flex; gap: 4px; align-items: center;">
+            <input type="number" id="b_alter_val" value="16" style="width: 55px;" oninput="syncSummary()">
+            <label class="pill-check"><input type="radio" name="b_alt_unit" value="Jahre" checked onchange="syncSummary()"> J.</label>
+            <label class="pill-check"><input type="radio" name="b_alt_unit" value="Monate" onchange="syncSummary()"> Mo.</label>
+            <label class="pill-check"><input type="radio" name="b_alt_unit" value="Tage" onchange="syncSummary()"> Tg.</label>
+          </div>
+        </div>
+
+        <div class="col-2 form-group">
+          <label class="field-label">Alterskategorie (Standardisiert)</label>
+          <div class="checkbox-group">
+            <label class="pill-check"><input type="radio" name="b_alt_kat" id="b_kat_neugeb"> Neugeb. (1-28d)</label>
+            <label class="pill-check"><input type="radio" name="b_alt_kat" id="b_kat_saeug"> Säugling (29-365d)</label>
+            <label class="pill-check"><input type="radio" name="b_alt_kat" id="b_kat_klein"> Kleinkind (1-&lt;4J)</label>
+            <label class="pill-check"><input type="radio" name="b_alt_kat" id="b_kat_kind"> Kind (4-&lt;13J)</label>
+            <label class="pill-check"><input type="radio" name="b_alt_kat" id="b_kat_jugend" checked> Jugendliche (13-&lt;18J)</label>
+            <label class="pill-check"><input type="radio" name="b_alt_kat" id="b_kat_erw"> Erwachsen (18+)</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-top: 12px;">
+        <div class="col-1 form-group">
+          <label class="field-label">Geschlecht</label>
+          <div class="checkbox-group">
+            <label class="pill-check"><input type="radio" name="b_geschl" value="m" onchange="syncSummary()"> männlich</label>
+            <label class="pill-check"><input type="radio" name="b_geschl" value="w" checked onchange="syncSummary()"> weiblich</label>
+            <label class="pill-check"><input type="radio" name="b_geschl" value="div" onchange="syncSummary()"> divers</label>
+          </div>
+        </div>
+        <div class="col-1 form-group">
+          <label class="field-label">Sonderstatus Schwangerschaft / Stillzeit</label>
+          <div class="checkbox-group">
+            <label class="pill-check"><input type="checkbox" id="b_stillzeit" onchange="syncSummary()"> w-Stillzeit</label>
+            <label class="pill-check"><input type="checkbox" id="b_schwanger" onchange="syncSummary()"> w-schwanger</label>
+            <span style="display: inline-flex; align-items: center; gap: 4px;">SSW: <input type="number" id="b_ssw" style="width: 45px; padding: 2px;" placeholder="SSW" oninput="syncSummary()"></span>
+          </div>
+        </div>
+        <div class="col-1 form-group">
+          <label class="field-label">Körpermaße (Dosisberechnung mg/kg)</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="number" id="b_gewicht" placeholder="54" style="width: 60px;" step="0.1" oninput="syncSummary()"> <span>kg</span>
+            <input type="number" id="b_groesse" placeholder="165" style="width: 60px;" oninput="syncSummary()"> <span>cm</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: EXPOSITION & NOXE -->
+    <div class="card-container" id="stepContent-3" style="display: none;">
+      <div class="card-title">
+        <span>Schritt 3: Exposition & Substanztabelle</span>
+        <span class="hint">Zeitpunkt, Ätiologie, Ort, Route und detaillierte Noxenmatrix (7 Zeilen)</span>
+      </div>
+
+      <div class="form-row">
+        <!-- Zeitpunkt -->
+        <div class="col-1 form-group" style="background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
+          <label class="field-label">Zeitpunkt Erstkontakt</label>
+          <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+            <label class="pill-check"><input type="radio" name="b_z_praef" checked> vor</label>
+            <label class="pill-check"><input type="radio" name="b_z_praef"> um</label>
+            <label class="pill-check"><input type="radio" name="b_z_praef"> über</label>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <input type="text" id="b_z_wert" placeholder="3.5" style="width: 50px;" oninput="syncSummary()">
+            <select id="b_z_unit" style="width: 80px;" onchange="syncSummary()">
+              <option value="Min">Minuten</option>
+              <option value="Std" selected>Stunden</option>
+              <option value="Tage">Tage</option>
+              <option value="Monate">Monate</option>
+              <option value="Jahre">Jahre</option>
+            </select>
+          </div>
+          <div style="margin-top: 8px;">
+            <span style="font-size: 10px; color: #64748b; font-weight: 700;">Typus:</span>
+            <div class="subst-flags" style="margin-top: 2px;">
+              <span class="flag-chip active" onclick="toggleChip(this)">A (Akut)</span>
+              <span class="flag-chip" onclick="toggleChip(this)">S (Subakut)</span>
+              <span class="flag-chip" onclick="toggleChip(this)">C (Chronisch)</span>
+              <span class="flag-chip" onclick="toggleChip(this)">B (Biphasisch)</span>
+              <span class="flag-chip" onclick="toggleChip(this)">U (Unbekannt)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ätiologie -->
+        <div class="col-1 form-group" style="background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
+          <label class="field-label">Ätiologie</label>
+          <div class="checkbox-group" style="max-height: 140px; overflow-y: auto;">
+            <label class="pill-check"><input type="checkbox" id="b_aet_suizidal" checked onchange="syncSummary()"> suizidal</label>
+            <label class="pill-check"><input type="checkbox" id="b_aet_akzid"> akzidentiell</label>
+            <label class="pill-check"><input type="checkbox" id="b_aet_abusus"> Abusus</label>
+            <label class="pill-check"><input type="checkbox" id="b_aet_unbek"> unbekannt</label>
+            <label class="pill-check"><input type="checkbox" id="b_aet_gewerb"> gewerblich</label>
+            <label class="pill-check"><input type="checkbox" id="b_aet_nw"> Nebenwirkung</label>
+            <label class="pill-check"><input type="checkbox" id="b_aet_umwelt"> Umwelt</label>
+            <label class="pill-check"><input type="checkbox" id="b_aet_psychose"> Psychose</label>
+            <label class="pill-check"><input type="checkbox" id="b_aet_delikt"> Giftbeibringung</label>
+            <label class="pill-check"><input type="checkbox" id="b_aet_caregiver"> Fehlgabe Caregiver</label>
+            <label class="pill-check"><input type="checkbox" id="b_aet_iatrogen"> iatrogen</label>
+          </div>
+          <input type="text" id="b_aet_txt" placeholder="Bemerkung zur Ätiologie" style="margin-top: 6px;">
+        </div>
+
+        <!-- Ort & Route -->
+        <div class="col-1 form-group" style="background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
+          <label class="field-label">Ort & Expositionsroute</label>
+          <div style="margin-bottom: 6px;">
+            <span style="font-size: 10px; font-weight: 700; color: #64748b;">Ort:</span>
+            <div class="checkbox-group">
+              <label class="pill-check"><input type="checkbox" id="b_ort_haus" checked> Haus</label>
+              <label class="pill-check"><input type="checkbox" id="b_ort_frei"> im Freien</label>
+              <label class="pill-check"><input type="checkbox" id="b_ort_schule"> Schule</label>
+              <label class="pill-check"><input type="checkbox" id="b_ort_kh"> Krankenhaus</label>
+              <label class="pill-check"><input type="checkbox" id="b_ort_unbek"> unbekannt</label>
+            </div>
+          </div>
+          <div>
+            <span style="font-size: 10px; font-weight: 700; color: #64748b;">Route:</span>
+            <div class="checkbox-group">
+              <label class="pill-check"><input type="checkbox" id="b_route_oral" checked> oral</label>
+              <label class="pill-check"><input type="checkbox" id="b_route_inhal"> inhalativ</label>
+              <label class="pill-check"><input type="checkbox" id="b_route_haut"> Haut</label>
+              <label class="pill-check"><input type="checkbox" id="b_route_auge"> Auge</label>
+              <label class="pill-check"><input type="checkbox" id="b_route_iv"> i.v.</label>
+              <label class="pill-check"><input type="checkbox" id="b_route_stich"> Stich/Biss</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7 SUBSTANCES ACCORDION/LIST -->
+      <div style="margin-top: 14px;">
+        <label class="field-label" style="font-size: 13px;">Substanztabelle (Bis zu 7 Toxine/Noxen)</label>
+        <div id="substancesWizardList">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: ANAMNESE -->
+    <div class="card-container" id="stepContent-4" style="display: none;">
+      <div class="card-title">
+        <span>Schritt 4: Anamnese & Vorgeschichte</span>
+        <span class="hint">Ereignisverlauf, Auffindesituation, VE (Vorerkrankungen) und VM (Vormedikation)</span>
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <label class="field-label">Anamnese (aktuelles Ereignis, Schilderung des Anrufers)</label>
+          <label class="pill-check"><input type="checkbox" id="b_anam_beiblatt"> Beiblatt vorhanden</label>
+        </div>
+        <textarea id="b_anam_txt" rows="5" placeholder="Genaue Schilderung des Notfallhergangs, Packungsfund, leere Blister, zeitlicher Ablauf..." oninput="syncSummary()"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="col-1 form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label class="field-label">VE (Vorerkrankungen / Vorereignisse)</label>
+            <label class="pill-check"><input type="checkbox" id="b_ve_beiblatt"> Beiblatt</label>
+          </div>
+          <textarea id="b_ve_txt" rows="3" placeholder="Vorerkrankungen, z. B. Depression, V.a. frühere Intoxikationen, Nieren-/Lebererkrankung..."></textarea>
+        </div>
+        <div class="col-1 form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label class="field-label">VM (Vormedikation / Dauermedikation)</label>
+            <label class="pill-check"><input type="checkbox" id="b_vm_beiblatt"> Beiblatt</label>
+          </div>
+          <textarea id="b_vm_txt" rows="3" placeholder="Reguläre Medikamente (Wechselwirkungen beachten!)..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: SYMPTOME & BEFUNDE -->
+    <div class="card-container" id="stepContent-5" style="display: none;">
+      <div class="card-title">
+        <span>Schritt 5: Symptome & Befunde / Vitalparameter</span>
+        <span class="hint">Klinischer Status vor und bei Anruf</span>
+      </div>
+
+      <div class="form-group" style="background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
+        <label class="field-label">Symptom-Status</label>
+        <div class="checkbox-group">
+          <label class="pill-check"><input type="checkbox" id="b_symp_keine" onchange="syncSummary()"> keine Symptome</label>
+          <label class="pill-check"><input type="checkbox" id="b_symp_wach" checked onchange="syncSummary()"> wach und voll orientiert</label>
+          <label class="pill-check"><input type="checkbox" id="b_symp_fraglich" onchange="syncSummary()"> Zusammenhang fraglich</label>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 14px;">
+        <label class="field-label">Vitalparameter & Laborwerte vor / bei Anruf</label>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          <div style="background: #fff; border: 1px solid #cbd5e1; padding: 8px; border-radius: 4px;">
+            <span style="font-weight: 700; color: #475569;">GCS (Glasgow Coma)</span>
+            <input type="number" id="b_vit_gcs" placeholder="15" min="3" max="15" style="font-size: 14px; font-weight: 700; margin-top: 4px;" oninput="syncSummary()">
+          </div>
+          <div style="background: #fff; border: 1px solid #cbd5e1; padding: 8px; border-radius: 4px;">
+            <span style="font-weight: 700; color: #475569;">SpO2 (%)</span>
+            <input type="number" id="b_vit_spo2" placeholder="98" min="0" max="100" style="font-size: 14px; font-weight: 700; margin-top: 4px;">
+          </div>
+          <div style="background: #fff; border: 1px solid #cbd5e1; padding: 8px; border-radius: 4px;">
+            <span style="font-weight: 700; color: #475569;">Herzfrequenz (HF /min)</span>
+            <input type="number" id="b_vit_hf" placeholder="88" style="font-size: 14px; font-weight: 700; margin-top: 4px;" oninput="syncSummary()">
+          </div>
+          <div style="background: #fff; border: 1px solid #cbd5e1; padding: 8px; border-radius: 4px;">
+            <span style="font-weight: 700; color: #475569;">Blutdruck (RR mmHg)</span>
+            <input type="text" id="b_vit_rr" placeholder="115/75" style="font-size: 14px; font-weight: 700; margin-top: 4px;" oninput="syncSummary()">
+          </div>
+          <div style="background: #fff; border: 1px solid #cbd5e1; padding: 8px; border-radius: 4px;">
+            <span style="font-weight: 700; color: #475569;">EKG QTc (ms)</span>
+            <input type="number" id="b_vit_qtc" placeholder="420" style="font-size: 14px; font-weight: 700; margin-top: 4px;">
+          </div>
+          <div style="background: #fff; border: 1px solid #cbd5e1; padding: 8px; border-radius: 4px;">
+            <span style="font-weight: 700; color: #475569;">pH-Wert</span>
+            <input type="text" id="b_vit_ph" placeholder="7.38" style="font-size: 14px; font-weight: 700; margin-top: 4px;">
+          </div>
+          <div style="background: #fff; border: 1px solid #cbd5e1; padding: 8px; border-radius: 4px;">
+            <span style="font-weight: 700; color: #475569;">Temperatur (°C)</span>
+            <input type="number" id="b_vit_temp" placeholder="36.8" step="0.1" style="font-size: 14px; font-weight: 700; margin-top: 4px;">
+          </div>
+          <div style="background: #fff; border: 1px solid #cbd5e1; padding: 8px; border-radius: 4px;">
+            <span style="font-weight: 700; color: #475569;">Blutzucker (BZ)</span>
+            <input type="number" id="b_vit_bz" placeholder="105" style="font-size: 14px; font-weight: 700; margin-top: 4px;">
+          </div>
+        </div>
+
+        <div style="margin-top: 10px; background: #fff; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 4px; display: flex; align-items: center; gap: 10px;">
+          <span style="font-weight: 700;">Blutalkohol (Ethanol):</span>
+          <input type="number" id="b_vit_ethanol" placeholder="0.00" step="0.01" style="width: 70px;">
+          <label class="pill-check"><input type="radio" name="b_eth_unit" value="mg/L"> mg/L</label>
+          <label class="pill-check"><input type="radio" name="b_eth_unit" value="promille" checked> ‰ (Promille)</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 6: MASSNAHMEN -->
+    <div class="card-container" id="stepContent-6" style="display: none;">
+      <div class="card-title">
+        <span>Schritt 6: Therapien, Maßnahmen & Antidote</span>
+        <span class="hint">v = vor Anruf &bull; e = empfohlen durch GIZ &bull; g = gegeben vor Ort</span>
+      </div>
+
+      <!-- EVA Zusatzbox -->
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #1e40af;">in EVA-1.0 Feld „Zusatz“ beachten:</span>
+        <div style="display: flex; gap: 16px; margin-top: 4px; flex-wrap: wrap;">
+          <div>caregiver: <label class="pill-check"><input type="checkbox" id="bz_care_fam"> Familie</label> <label class="pill-check"><input type="checkbox" id="bz_care_betr"> Betreuung</label></div>
+          <div>KH/Klinik: <label class="pill-check"><input type="checkbox" id="bz_kh_som" checked> somatisch</label> <label class="pill-check"><input type="checkbox" id="bz_kh_psych"> Psychiatrie</label></div>
+          <div>Monitoring: <label class="pill-check"><input type="checkbox" id="bz_mon_allg"> Klinik allg.</label> <label class="pill-check"><input type="checkbox" id="bz_mon_zna" checked> ZNA</label> <label class="pill-check"><input type="checkbox" id="bz_mon_its"> Intensiv</label> <label class="pill-check"><input type="checkbox" id="bz_mon_imc"> IMC</label></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- Main interventions -->
+        <div class="col-2" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 10px;">
+          <div style="font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between;">
+            <span>Maßnahme / Intervention</span>
+            <span style="font-size: 10px; color: #64748b;">(v = vorher | e = empfohlen | g = gegeben)</span>
+          </div>
+          <div id="wizardTherapiesList" style="max-height: 400px; overflow-y: auto;">
+            <!-- JS populated -->
+          </div>
+        </div>
+
+        <!-- Specific Meds -->
+        <div class="col-1" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 10px;">
+          <div style="font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between;">
+            <span>Spezifische Medikation</span>
+            <span style="font-size: 10px; color: #64748b;">(e | g)</span>
+          </div>
+          <div id="wizardMedsList" style="max-height: 400px; overflow-y: auto;">
+            <!-- JS populated -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 7: BEWERTUNG / PSS & PROZEDERE -->
+    <div class="card-container" id="stepContent-7" style="display: none;">
+      <div class="card-title">
+        <span>Schritt 7: Vergiftungsschweregrad (PSS) & Prozedere</span>
+        <span class="hint">Abschließende toxikologische Risikoeinstufung und Disposition</span>
+      </div>
+
+      <div class="form-row">
+        <!-- PSS vor/bei Anruf -->
+        <div class="col-1 form-group" style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1;">
+          <label class="field-label" style="font-size: 12.5px;">PSS vor / bei Anruf (Ist-Zustand)</label>
+          <div class="pss-picker" id="wPssVorContainer">
+            <div class="pss-choice" onclick="selectWizardPssVor('0')">⓪ Keine</div>
+            <div class="pss-choice selected-1" onclick="selectWizardPssVor('1')">① Leicht</div>
+            <div class="pss-choice" onclick="selectWizardPssVor('2')">② Mittel</div>
+            <div class="pss-choice" onclick="selectWizardPssVor('3')">③ Schwer</div>
+            <div class="pss-choice" onclick="selectWizardPssVor('4')">④ Letal</div>
+            <div class="pss-choice" onclick="selectWizardPssVor('U')">U Unbek.</div>
+          </div>
+          <div id="wPssVorDesc" style="margin-top: 8px; font-weight: 700; color: #d97706; font-size: 11px;">Aktuell: Grad 1 (Leichte Symptome wie Übelkeit, Schwindel, leichte Tachykardie)</div>
+        </div>
+
+        <!-- max PSS potentiell -->
+        <div class="col-1 form-group" style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1;">
+          <label class="field-label" style="font-size: 12.5px;">max. PSS potentiell (Prognose / Worst-Case)</label>
+          <div class="pss-picker" id="wPssPotContainer">
+            <div class="pss-choice" onclick="selectWizardPssPot('0')">⓪ Keine</div>
+            <div class="pss-choice" onclick="selectWizardPssPot('1')">① Leicht</div>
+            <div class="pss-choice" onclick="selectWizardPssPot('2')">② Mittel</div>
+            <div class="pss-choice selected-3" onclick="selectWizardPssPot('3')">③ Schwer</div>
+            <div class="pss-choice" onclick="selectWizardPssPot('4')">④ Letal</div>
+            <div class="pss-choice" onclick="selectWizardPssPot('U')">U Unbek.</div>
+          </div>
+          <div id="wPssPotDesc" style="margin-top: 8px; font-weight: 700; color: #dc2626; font-size: 11px;">Potentiell: Grad 3 (Schwere Vergiftung bei ausbleibender Antidotgabe zu erwarten!)</div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 14px; background: #fff; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1;">
+        <label class="field-label" style="font-size: 12.5px;">Wegen Noxe empfohlenes Prozedere (Disposition)</label>
+        <div class="checkbox-group" style="margin-top: 6px;">
+          <label class="pill-check"><input type="checkbox" id="bp_keines"> keines</label>
+          <label class="pill-check"><input type="checkbox" id="bp_laie"> Laie (häuslich belassen)</label>
+          <label class="pill-check"><input type="checkbox" id="bp_ambulant"> ambulant</label>
+          <label class="pill-check selected"><input type="checkbox" id="bp_stationaer" checked onchange="syncSummary()"> stationär (Normalstation)</label>
+          <label class="pill-check selected"><input type="checkbox" id="bp_its" checked onchange="syncSummary()"> Intensiv / IMC</label>
+          <label class="pill-check"><input type="checkbox" id="bp_unklar"> nicht zu entsch.</label>
+          <label class="pill-check"><input type="checkbox" id="bp_beiblatt"> Beiblatt</label>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px; background: #ecfdf5; border: 1px solid #10b981; padding: 14px; border-radius: 6px; text-align: center;">
+        <h4 style="color: #065f46; font-size: 14px; margin-bottom: 4px;">Fall vollständig dokumentiert</h4>
+        <p style="color: #047857; margin-bottom: 10px;">Alle klinischen Kernabschnitte wurden durchlaufen. Sie können den Fall jetzt im GIZ-Archiv speichern oder als PDF exportieren.</p>
+        <button class="btn-top btn-accent" style="margin: 0 auto; padding: 8px 20px; font-size: 13px;" onclick="finishWizard()">💾 Protokoll jetzt abschließen & archivieren</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PERSISTENT SUMMARY SIDEBAR (RIGHT) -->
+  <div class="summary-sidebar">
+    <div class="sidebar-header">
+      <span>Live-Falldossier</span>
+      <span style="font-size: 10px; color: #38bdf8;">EVA 5.26</span>
+    </div>
+    <div class="sidebar-body">
+      <!-- Call Status -->
+      <div class="summary-card">
+        <div class="summary-card-title">Anruf & Triage</div>
+        <div class="summary-line"><span>AZ:</span> <strong id="sumAz">BN-2026-10493</strong></div>
+        <div class="summary-line"><span>Anrufer:</span> <strong id="sumAnrufer">Dr. Weber (ZNA)</strong></div>
+        <div class="summary-line"><span>Kontakt:</span> <strong id="sumKontakt">0228-287-12345</strong></div>
+      </div>
+
+      <!-- Patient -->
+      <div class="summary-card">
+        <div class="summary-card-title">Patient</div>
+        <div class="summary-line"><span>Name:</span> <strong id="sumPatient">Becker, Julia</strong></div>
+        <div class="summary-line"><span>Alter/Sex:</span> <strong id="sumAlterSex">16 J. (w)</strong></div>
+        <div class="summary-line"><span>Gewicht:</span> <strong id="sumGewicht">54 kg</strong></div>
+      </div>
+
+      <!-- Toxine / Noxen -->
+      <div class="summary-card">
+        <div class="summary-card-title">Leitnoxe & Dosis</div>
+        <div class="summary-line"><span>Noxe:</span> <strong id="sumNoxe">Paracetamol (oral)</strong></div>
+        <div class="summary-line"><span>Menge:</span> <strong id="sumMenge">ca. 15g (30 Tbl.)</strong></div>
+        <div class="summary-line"><span>Latenz:</span> <strong id="sumLatenz">vor ca. 3.5 Std.</strong></div>
+      </div>
+
+      <!-- Vitals -->
+      <div class="summary-card">
+        <div class="summary-card-title">Klinischer Status</div>
+        <div class="summary-line"><span>GCS:</span> <strong id="sumGcs">15 (wach)</strong></div>
+        <div class="summary-line"><span>HF / RR:</span> <strong id="sumHfRr">88 bpm | 115/75</strong></div>
+      </div>
+
+      <!-- PSS & Dispo -->
+      <div class="summary-card">
+        <div class="summary-card-title">PSS Risikobewertung</div>
+        <div class="summary-line"><span>Aktuell PSS:</span> <strong id="sumPssVor">Grad 1 (Leicht)</strong></div>
+        <div class="summary-line"><span>Potentiell PSS:</span> <strong id="sumPssPot" style="color: #ef4444;">Grad 3 (Schwer)</strong></div>
+        <div class="pss-badge-large" id="sumBadgeDispo" style="background: #b91c1c; color: white;">Stationär / Intensiv (IMC)</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAVIGATION -->
+<div class="bottom-nav">
+  <button class="btn-nav" id="btnPrev" onclick="navigateStep(-1)" disabled>
+    &larr; Zurück <span style="font-size: 10px; color: #64748b;">(Alt+&larr;)</span>
+  </button>
+  <div style="font-weight: 600; color: #475569;" id="navStepIndicator">Schritt 1 von 7</div>
+  <button class="btn-nav btn-primary" id="btnNext" onclick="navigateStep(1)">
+    Weiter &rarr; <span style="font-size: 10px; opacity: 0.8;">(Alt+&rarr;)</span>
+  </button>
+</div>
+
+<div id="statusToast" class="status-toast"></div>
+
+<script>
+  let currentStep = 1;
+  const totalSteps = 7;
+
+  // Build Substance Rows in Step 3
+  const substContainer = document.getElementById('substancesWizardList');
+  for (let i = 1; i <= 7; i++) {
+    const row = document.createElement('div');
+    row.className = 'subst-row';
+    row.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <strong style="color: #334155;">Noxe #${i}</strong>
+        <span style="font-size: 9.5px; color: #64748b;">Exposition: 
+          <span class="flag-chip ${i===1?'active':''}" onclick="setExpoChip(${i}, 'G')" id="wch_exp_${i}_G">G</span>
+          <span class="flag-chip" onclick="setExpoChip(${i}, 'N')" id="wch_exp_${i}_N">N</span>
+          <span class="flag-chip" onclick="setExpoChip(${i}, 'K')" id="wch_exp_${i}_K">K</span>
+        </span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <div style="flex: 2;">
+          <input type="text" id="w_noxe_${i}" placeholder="${i===1?'z. B. Paracetamol 500mg Tabletten':'Weitere Noxe / Substanz'}" oninput="syncSummary()">
+          <div class="subst-flags">
+            <span class="flag-chip ${i===1?'active':''}" onclick="toggleChip(this)">G (Giftig)</span>
+            <span class="flag-chip" onclick="toggleChip(this)">N (Nicht giftig)</span>
+            <span class="flag-chip" onclick="toggleChip(this)">K (Kontaminiert)</span>
+            <span class="flag-chip ${i===1?'active':''}" onclick="toggleChip(this)">T (Toxisch)</span>
+          </div>
+        </div>
+        <div style="flex: 1.2;">
+          <input type="text" id="w_menge_${i}" placeholder="${i===1?'30 Tabletten (15g)':'Menge / Dosis'}" oninput="syncSummary()">
+          <div class="subst-flags">
+            <span class="flag-chip ${i===1?'active':''}" onclick="toggleChip(this)">G (Gesichert)</span>
+            <span class="flag-chip" onclick="toggleChip(this)">N (Geschätzt)</span>
+            <span class="flag-chip" onclick="toggleChip(this)">U (Unbekannt)</span>
+            <span class="flag-chip ${i===1?'active':''}" onclick="toggleChip(this)">max (Maximal)</span>
+          </div>
+        </div>
+      </div>
+    `;
+    substContainer.appendChild(row);
+  }
+
+  function setExpoChip(row, flag) {
+    ['G', 'N', 'K'].forEach(f => {
+      const el = document.getElementById(`wch_exp_${row}_${f}`);
+      if (el) el.classList.toggle('active', f === flag);
+    });
+  }
+
+  function toggleChip(chip) {
+    chip.classList.toggle('active');
+  }
+
+  // Populate Wizard Step 6 (Therapies & Meds)
+  const wTherapies = [
+    { id: 'keine', name: 'Keine' },
+    { id: 'symptominfo', name: 'Symptominfo telefonisch / FAX' },
+    { id: 'ueberwach', name: 'Überwachung' },
+    { id: 'spuelen', name: 'Spülen' },
+    { id: 'fluessigkeit', name: 'Flüssigkeit oral' },
+    { id: 'entschaeumen', name: 'Entschäumen (Butter / Simeticon)' },
+    { id: 'wg_noxe_arzt', name: 'wg. Noxe Ärztl. Untersuchung' },
+    { id: 'wg_symp_arzt', name: 'wg. Symptom Ärztl. Untersuchung' },
+    { id: 'symptomatisch', name: 'Symptomat. Therapie/Massnahmen' },
+    { id: 'kohle', name: 'Aktivkohle (repetitiv / prolongiert)' },
+    { id: 'labor', name: 'Labor (Leber, Niere, Gerinnung)' },
+    { id: 'blutspiegel', name: 'Blutspiegel (Ethanol / Noxe)' },
+    { id: 'antidot', name: 'Antidot (Flumazenil, Naloxon, ACC)' },
+    { id: 'volumen', name: 'Volumentherapie i.v.' },
+    { id: 'veraetzung', name: 'Verätzungsschema' },
+    { id: 'cortison', name: 'Cortison (i.v. / inhal. / lokal)' },
+    { id: 'magenspuel', name: 'Magenspül. (Endo / Intub.schutz)' },
+    { id: 'intubation', name: 'Intubation / Beatmung' },
+    { id: 'giftelim', name: 'sek. Giftelim. (HD / lipid rescue)' },
+    { id: 'produktinfo', name: 'Produktinformation / SDB' },
+    { id: 'bestimmung', name: 'Bestimmung Noxe und Wiederanruf' },
+    { id: 'pilz', name: 'Pilzsachverständige PSV' },
+    { id: 'rueckruf_giz', name: 'Rückruf durch GIZ' },
+    { id: 'kontakt_empf', name: 'GIZ empfiehlt Kontaktaufnahme' }
+  ];
+
+  const wTherapiesContainer = document.getElementById('wizardTherapiesList');
+  wTherapies.forEach(t => {
+    const item = document.createElement('div');
+    item.style.display = 'flex';
+    item.style.alignItems = 'center';
+    item.style.justifyContent = 'space-between';
+    item.style.padding = '4px 6px';
+    item.style.borderBottom = '1px solid #f1f5f9';
+    item.innerHTML = `
+      <span style="font-weight: 500;">${t.name}</span>
+      <div style="display: flex; gap: 8px;">
+        <label><input type="checkbox" id="wth_${t.id}_v"> v</label>
+        <label><input type="checkbox" id="wth_${t.id}_e"> e</label>
+        <label><input type="checkbox" id="wth_${t.id}_g"> g</label>
+      </div>
+    `;
+    wTherapiesContainer.appendChild(item);
+  });
+
+  const wMeds = ['Benzodiaz', 'NaBi', 'Mg++', 'Katecholamin', 'Biperiden', "E'lyt-Subst.", 'Glukose', 'ß-Blocker', 'Vitamin B1', 'Lidocain', 'Temp.Kontr.', 'kühlen', 'Physostig'];
+  const wMedsContainer = document.getElementById('wizardMedsList');
+  wMeds.forEach(m => {
+    const slug = m.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const item = document.createElement('div');
+    item.style.display = 'flex';
+    item.style.alignItems = 'center';
+    item.style.justifyContent = 'space-between';
+    item.style.padding = '4px 6px';
+    item.style.borderBottom = '1px solid #f1f5f9';
+    item.innerHTML = `
+      <span style="font-weight: 600;">${m}</span>
+      <div style="display: flex; gap: 8px;">
+        <label><input type="checkbox" id="wmed_${slug}_e"> e</label>
+        <label><input type="checkbox" id="wmed_${slug}_g"> g</label>
+      </div>
+    `;
+    wMedsContainer.appendChild(item);
+  });
+
+  // Step Navigation
+  function goToStep(step) {
+    if (step < 1 || step > totalSteps) return;
+    
+    // Mark previous steps as completed
+    for (let i = 1; i <= totalSteps; i++) {
+      const tab = document.getElementById(`stepTab-${i}`);
+      const content = document.getElementById(`stepContent-${i}`);
+      if (tab) {
+        tab.classList.toggle('active', i === step);
+        if (i < step) tab.classList.add('completed');
+      }
+      if (content) {
+        content.style.display = (i === step) ? 'block' : 'none';
+      }
+    }
+
+    currentStep = step;
+    document.getElementById('navStepIndicator').textContent = `Schritt ${currentStep} von ${totalSteps}`;
+    document.getElementById('btnPrev').disabled = (currentStep === 1);
+    
+    const nextBtn = document.getElementById('btnNext');
+    if (currentStep === totalSteps) {
+      nextBtn.textContent = 'Fall abschließen 💾';
+      nextBtn.className = 'btn-nav btn-success';
+    } else {
+      nextBtn.innerHTML = 'Weiter &rarr; <span style="font-size: 10px; opacity: 0.8;">(Alt+&rarr;)</span>';
+      nextBtn.className = 'btn-nav btn-primary';
+    }
+
+    syncSummary();
+  }
+
+  function navigateStep(direction) {
+    if (currentStep === totalSteps && direction === 1) {
+      finishWizard();
+      return;
+    }
+    goToStep(currentStep + direction);
+  }
+
+  // PSS Helpers for Wizard
+  let wPssVor = '1';
+  let wPssPot = '3';
+
+  function selectWizardPssVor(val) {
+    wPssVor = val;
+    const choices = document.querySelectorAll('#wPssVorContainer .pss-choice');
+    const keys = ['0','1','2','3','4','U'];
+    choices.forEach((c, idx) => {
+      c.className = 'pss-choice';
+      if (keys[idx] === val) c.classList.add('selected-' + val.toLowerCase());
+    });
+    const descs = {
+      '0': 'Aktuell: Grad 0 (Keine Symptome)',
+      '1': 'Aktuell: Grad 1 (Leichte Symptome wie Übelkeit, Schwindel)',
+      '2': 'Aktuell: Grad 2 (Mittelschwere Symptome)',
+      '3': 'Aktuell: Grad 3 (Schwere Symptome / Organversagen)',
+      '4': 'Aktuell: Grad 4 (Letaler Verlauf)',
+      'U': 'Aktuell: Grad U (Nicht beurteilbar)'
+    };
+    document.getElementById('wPssVorDesc').textContent = descs[val];
+    syncSummary();
+  }
+
+  function selectWizardPssPot(val) {
+    wPssPot = val;
+    const choices = document.querySelectorAll('#wPssPotContainer .pss-choice');
+    const keys = ['0','1','2','3','4','U'];
+    choices.forEach((c, idx) => {
+      c.className = 'pss-choice';
+      if (keys[idx] === val) c.classList.add('selected-' + val.toLowerCase());
+    });
+    const descs = {
+      '0': 'Potentiell: Grad 0 (Keine Toxizität zu erwarten)',
+      '1': 'Potentiell: Grad 1 (Leichter Verlauf erwartet)',
+      '2': 'Potentiell: Grad 2 (Mittelschwerer Verlauf möglich)',
+      '3': 'Potentiell: Grad 3 (Schwere Vergiftung bei ausbleibender Antidotgabe!)',
+      '4': 'Potentiell: Grad 4 (Letales Potenzial)',
+      'U': 'Potentiell: Grad U (Unklar)'
+    };
+    document.getElementById('wPssPotDesc').textContent = descs[val];
+    syncSummary();
+  }
+
+  // Toast
+  function showToast(text) {
+    const t = document.getElementById('statusToast');
+    t.textContent = text;
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 2600);
+  }
+
+  // Synchronize Live Sidebar
+  function syncSummary() {
+    document.getElementById('sumAz').textContent = document.getElementById('b_az').value || 'BN-DRAFT';
+    document.getElementById('topAz').textContent = document.getElementById('b_az').value || 'BN-DRAFT';
+    document.getElementById('topBerater').textContent = document.getElementById('b_berater').value || '-';
+    
+    const anruferName = document.getElementById('b_anrufer_name').value || 'Unbekannt';
+    const anruferTyp = document.querySelector('input[name="b_anrufer_typ"]:checked')?.value || '';
+    document.getElementById('sumAnrufer').textContent = `${anruferName} (${anruferTyp})`;
+    document.getElementById('sumKontakt').textContent = document.getElementById('b_anrufer_tel').value || '-';
+
+    document.getElementById('sumPatient').textContent = document.getElementById('b_pat_name').value || 'Unbekannt';
+    const altVal = document.getElementById('b_alter_val').value || '-';
+    const altUnit = document.querySelector('input[name="b_alt_unit"]:checked')?.value || 'J';
+    const sex = document.querySelector('input[name="b_geschl"]:checked')?.value || '?';
+    document.getElementById('sumAlterSex').textContent = `${altVal} ${altUnit} (${sex})`;
+    document.getElementById('sumGewicht').textContent = (document.getElementById('b_gewicht').value || '-') + ' kg';
+
+    document.getElementById('sumNoxe').textContent = document.getElementById('w_noxe_1').value || 'Keine Noxe eingetragen';
+    document.getElementById('sumMenge').textContent = document.getElementById('w_menge_1').value || '-';
+    const zWert = document.getElementById('b_z_wert').value || '?';
+    const zUnit = document.getElementById('b_z_unit').value || 'Std';
+    document.getElementById('sumLatenz').textContent = `vor ca. ${zWert} ${zUnit}`;
+
+    const gcs = document.getElementById('b_vit_gcs').value || '15';
+    document.getElementById('sumGcs').textContent = `GCS ${gcs}`;
+    const hf = document.getElementById('b_vit_hf').value || '-';
+    const rr = document.getElementById('b_vit_rr').value || '-';
+    document.getElementById('sumHfRr').textContent = `${hf} bpm | ${rr}`;
+
+    const pssTexts = {'0':'Grad 0 (Keine)', '1':'Grad 1 (Leicht)', '2':'Grad 2 (Mittel)', '3':'Grad 3 (Schwer)', '4':'Grad 4 (Letal)', 'U':'Grad U (Unbek.)'};
+    document.getElementById('sumPssVor').textContent = pssTexts[wPssVor];
+    document.getElementById('sumPssPot').textContent = pssTexts[wPssPot];
+  }
+
+  function autoCalcAgeWizard() {
+    const val = document.getElementById('b_pat_geb').value;
+    if (!val) return;
+    const diff = new Date().getFullYear() - new Date(val).getFullYear();
+    document.getElementById('b_alter_val').value = diff;
+    if (diff < 18) document.getElementById('b_kat_jugend').checked = true;
+    else document.getElementById('b_kat_erw').checked = true;
+    syncSummary();
+  }
+
+  // Load Sample Data (Adolescent Paracetamol Suicide Attempt)
+  function loadSampleCase() {
+    document.getElementById('b_berater').value = 'Petra Förster (Nr. 14)';
+    document.getElementById('b_az').value = 'BN-2026-10493';
+    document.getElementById('b_anrufer_name').value = 'Dr. med. Weber, Thomas (ZNA-Oberarzt)';
+    document.getElementById('b_anrufer_tel').value = '0228-287-12345 (ZNA Übergabeplatz)';
+    document.getElementById('b_anrufer_ort').value = 'Universitätsklinikum Bonn, ZNA';
+
+    document.getElementById('b_pat_name').value = 'Becker, Julia';
+    document.getElementById('b_pat_fallnr').value = 'UKB-883901';
+    document.getElementById('b_pat_geb').value = '2010-06-15';
+    document.getElementById('b_alter_val').value = '16';
+    document.getElementById('b_kat_jugend').checked = true;
+    document.getElementById('b_gewicht').value = '54';
+    document.getElementById('b_groesse').value = '165';
+
+    document.getElementById('b_z_wert').value = '3.5';
+    document.getElementById('b_aet_suizidal').checked = true;
+    document.getElementById('w_noxe_1').value = 'Paracetamol 500mg Tabletten (Ratiopharm)';
+    document.getElementById('w_menge_1').value = '30 Tabletten (15.000 mg = 277 mg/kg KG)';
+    
+    document.getElementById('b_anam_txt').value = 'Patientin wurde nach Streit von Eltern im Zimmer mit 3 leeren Blistern Paracetamol aufgefunden. Einnahme vor ca. 3,5 Stunden. Übelkeit, einmaliges Erbrechen von Mageninhalt.';
+    document.getElementById('b_ve_txt').value = 'Depressive Episode in kinder- und jugendpsychiatrischer Betreuung.';
+    document.getElementById('b_vm_txt').value = 'Fluoxetin 20mg 1x tgl.';
+
+    document.getElementById('b_symp_keine').checked = false;
+    document.getElementById('b_symp_wach').checked = true;
+    document.getElementById('b_vit_gcs').value = '15';
+    document.getElementById('b_vit_hf').value = '88';
+    document.getElementById('b_vit_rr').value = '115/75';
+    document.getElementById('b_vit_spo2').value = '98';
+
+    // Therapies
+    document.getElementById('wth_labor_e').checked = true;
+    document.getElementById('wth_blutspiegel_e').checked = true;
+    document.getElementById('wth_antidot_e').checked = true;
+    document.getElementById('wth_volumen_e').checked = true;
+    document.getElementById('wth_ueberwach_e').checked = true;
+
+    selectWizardPssVor('1');
+    selectWizardPssPot('3');
+
+    document.getElementById('bp_stationaer').checked = true;
+    document.getElementById('bp_its').checked = true;
+
+    syncSummary();
+    goToStep(1);
+    showToast('Klinischer Beispielfall (Paracetamol-Überdosierung Jugendliche) geladen!');
+  }
+
+  function resetForm() {
+    if (confirm('Wizard wirklich zurücksetzen?')) {
+      document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(e => e.value = '');
+      document.querySelectorAll('input[type="checkbox"]').forEach(e => e.checked = false);
+      selectWizardPssVor('0');
+      selectWizardPssPot('0');
+      goToStep(1);
+      showToast('Formular zurückgesetzt.');
+    }
+  }
+
+  function finishWizard() {
+    showToast('Fall BN-2026-10493 erfolgreich validiert und abgeschlossen!');
+  }
+
+  // Keyboard navigation
+  window.addEventListener('keydown', (e) => {
+    if (e.altKey && e.key === 'ArrowRight') {
+      e.preventDefault();
+      navigateStep(1);
+    } else if (e.altKey && e.key === 'ArrowLeft') {
+      e.preventDefault();
+      navigateStep(-1);
+    } else if (e.altKey && e.key.toLowerCase() === 'l') {
+      e.preventDefault();
+      loadSampleCase();
+    } else if (e.altKey && e.key.toLowerCase() === 'r') {
+      e.preventDefault();
+      resetForm();
+    }
+  });
+
+  // Init
+  syncSummary();
+</script>
+</body>
+</html>

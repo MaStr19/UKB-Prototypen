@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EVA-Protokoll 5.26 – GIZ Bonn (Prototyp C: Hybrid Workspace)</title>
+<style>
+  :root {
+    --bg-main: #f0f2f5;
+    --panel-bg: #ffffff;
+    --header-bg: #111827;
+    --border-color: #d1d5db;
+    --border-focus: #2563eb;
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+    --accent: #1d4ed8;
+    --accent-hover: #1e40af;
+    --success: #059669;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --missing-warn: #fef2f2;
+    --missing-border: #f87171;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-size: 11.5px; }
+
+  body {
+    background: var(--bg-main);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* 1. TOP APP BAR */
+  .top-bar {
+    background: #0f172a;
+    color: #fff;
+    padding: 6px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #1e293b;
+    flex-shrink: 0;
+  }
+  .app-title {
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .app-badge {
+    background: #2563eb;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9.5px;
+    font-weight: 700;
+  }
+  .top-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .btn-action {
+    background: #1e293b;
+    color: #f1f5f9;
+    border: 1px solid #334155;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-action:hover { background: #334155; }
+  .btn-action.btn-green { background: #059669; border-color: #10b981; }
+  .btn-action.btn-green:hover { background: #10b981; }
+
+  /* 2. PERSISTENT CORE CALL BANNER (ALWAYS VISIBLE AT TOP) */
+  .pinned-core-banner {
+    background: #1e293b;
+    color: #f8fafc;
+    padding: 8px 16px;
+    display: grid;
+    grid-template-columns: 140px 1.4fr 1.4fr 1.6fr 150px;
+    gap: 12px;
+    align-items: center;
+    border-bottom: 2px solid #0284c7;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .core-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .core-label {
+    font-size: 9.5px;
+    text-transform: uppercase;
+    color: #38bdf8;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .core-val {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .core-val input {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #fff;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 700;
+  }
+
+  /* 3. SPLIT WORKSPACE */
+  .split-workspace {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* LEFT PANE: TABS OR ACCORDIONS */
+  .left-pane {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #f8fafc;
+    border-right: 1px solid var(--border-color);
+  }
+
+  /* TAB BAR */
+  .tab-strip {
+    display: flex;
+    background: #e2e8f0;
+    border-bottom: 1px solid #cbd5e1;
+    padding: 4px 8px 0 8px;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .tab-btn {
+    padding: 7px 14px;
+    background: #cbd5e1;
+    border: 1px solid #94a3b8;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab-btn:hover { background: #e2e8f0; }
+  .tab-btn.active {
+    background: #ffffff;
+    color: #1d4ed8;
+    border-color: #cbd5e1;
+    border-top: 3px solid #2563eb;
+    font-weight: 700;
+  }
+  .tab-badge-err {
+    background: #ef4444;
+    color: white;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+  }
+
+  .tab-content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+  }
+
+  /* ACCORDION / CARD SECTION */
+  .section-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .section-header {
+    background: #f8fafc;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  .section-body {
+    padding: 12px;
+  }
+
+  /* FORM STYLES */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+
+  .fg { margin-bottom: 8px; }
+  .fg label.fl {
+    display: block;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 3px;
+    font-size: 11px;
+  }
+  input[type="text"], input[type="number"], input[type="time"], input[type="date"], textarea, select {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #cbd5e1;
+    border-radius: 3px;
+    font-size: 11px;
+    color: #0f172a;
+    background: #fff;
+    outline: none;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1.5px rgba(37,99,235,0.25);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10.5px;
+  }
+  .pill input { accent-color: #2563eb; }
+  .pill:has(input:checked) {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+    font-weight: 600;
+  }
+
+  /* 4. RIGHT SIDE SPLIT: LIVE DOSSIER & COMPLETENESS CHECKER */
+  .right-pane {
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .right-header {
+    background: #1e293b;
+    color: #fff;
+    padding: 8px 12px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .right-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* VALIDATION WIDGET */
+  .validation-box {
+    background: #fff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 5px;
+    padding: 8px 10px;
+  }
+  .validation-box.has-errors {
+    border-color: #fca5a5;
+    background: #fffaf0;
+  }
+  .validation-header {
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+  .validation-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .validation-item {
+    font-size: 10.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .validation-item.missing {
+    color: #dc2626;
+    font-weight: 600;
+  }
+  .validation-item.complete {
+    color: #059669;
+  }
+
+  /* QUICK SUMMARY DOSSIER */
+  .dossier-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 8px;
+  }
+  .dossier-title {
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 2px;
+  }
+  .dossier-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
+    font-size: 10.5px;
+  }
+
+  /* PSS SCALE IN TAB 5 */
+  .pss-grid {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .pss-box {
+    flex: 1;
+    padding: 8px 4px;
+    text-align: center;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 12px;
+    background: #f8fafc;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .pss-box:hover { background: #e2e8f0; }
+  .pss-box.active-0 { background: #10b981; color: white; border-color: #059669; }
+  .pss-box.active-1 { background: #f59e0b; color: white; border-color: #d97706; }
+  .pss-box.active-2 { background: #f97316; color: white; border-color: #ea580c; }
+  .pss-box.active-3 { background: #ef4444; color: white; border-color: #dc2626; }
+  .pss-box.active-4 { background: #0f172a; color: white; border-color: #000; }
+  .pss-box.active-u { background: #64748b; color: white; border-color: #475569; }
+
+  /* SUBSTANCE TABLE MATRIX */
+  .c-subst-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .c-subst-table th {
+    background: #f1f5f9;
+    padding: 4px 6px;
+    border: 1px solid #cbd5e1;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .c-subst-table td {
+    padding: 3px 6px;
+    border: 1px solid #e2e8f0;
+    vertical-align: middle;
+  }
+  .chip-btn {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+  }
+  .chip-btn.active {
+    background: #1e293b;
+    color: white;
+    border-color: #0f172a;
+  }
+
+  .status-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #1e293b;
+    color: #38bdf8;
+    border: 1px solid #38bdf8;
+    padding: 8px 16px;
+    border-radius: 4px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-weight: 600;
+    z-index: 1000;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- 1. TOP APP BAR -->
+<div class="top-bar">
+  <div class="app-title">
+    <span>GIZ Bonn &bull; Toxikologischer Notruf-Arbeitsplatz</span>
+    <span class="app-badge">Prototyp C: Hybrid Workspace</span>
+  </div>
+  <div class="top-actions">
+    <button class="btn-action btn-green" onclick="loadSampleCaseC()" title="Alt+L">⚡ Beispieldaten laden <span style="font-size: 9px; opacity: 0.8;">[Alt+L]</span></button>
+    <button class="btn-action" onclick="toggleAllSections()">📂 Alle aufklappen</button>
+    <button class="btn-action" onclick="resetFormC()" title="Alt+R">🗑️ Reset <span style="font-size: 9px; opacity: 0.8;">[Alt+R]</span></button>
+    <button class="btn-action" onclick="window.print()">🖨️ Drucken</button>
+  </div>
+</div>
+
+<!-- 2. PINNED CORE CALL BANNER (CORE CALL DATA ALWAYS VISIBLE) -->
+<div class="pinned-core-banner">
+  <div class="core-item">
+    <span class="core-label">Fall-AZ</span>
+    <span class="core-val"><input type="text" id="c_az" value="BN-2026-10494" style="width: 110px;" oninput="updateChecker()"></span>
+  </div>
+  <div class="core-item">
+    <span class="core-label">Anrufer / Kontakt (Rückruf)</span>
+    <span class="core-val" id="topCoreCaller">Notarzt Dr. Keller (0172-5551234)</span>
+  </div>
+  <div class="core-item">
+    <span class="core-label">Patient</span>
+    <span class="core-val" id="topCorePatient">Schmidt, Hans &bull; 62 J. (m)</span>
+  </div>
+  <div class="core-item">
+    <span class="core-label">Leitnoxe & Schweregrad</span>
+    <span class="core-val" id="topCoreNoxe">Knollenblätterpilz (Amanita) &bull; PSS 2</span>
+  </div>
+  <div class="core-item" style="text-align: right;">
+    <span class="core-label">Status</span>
+    <span class="core-val" style="color: #38bdf8;">🟢 Aktiv in Beratung</span>
+  </div>
+</div>
+
+<!-- 3. SPLIT WORKSPACE -->
+<div class="split-workspace">
+
+  <!-- LEFT PANE -->
+  <div class="left-pane">
+    <!-- TAB STRIP -->
+    <div class="tab-strip">
+      <div class="tab-btn active" onclick="switchTab('tab-caller-patient')" id="btn-tab-caller-patient">
+        <span>1. Anrufer & Patient</span>
+        <span class="tab-badge-err" id="tabBadge1" style="display: none;">!</span>
+      </div>
+      <div class="tab-btn" onclick="switchTab('tab-noxen')" id="btn-tab-noxen">
+        <span>2. Noxen & Substanzen</span>
+        <span class="tab-badge-err" id="tabBadge2" style="display: none;">!</span>
+      </div>
+      <div class="tab-btn" onclick="switchTab('tab-anamnese-vitals')" id="btn-tab-anamnese-vitals">
+        <span>3. Anamnese & Vitalstatus</span>
+      </div>
+      <div class="tab-btn" onclick="switchTab('tab-therapie')" id="btn-tab-therapie">
+        <span>4. Maßnahmen & Antidote</span>
+      </div>
+      <div class="tab-btn" onclick="switchTab('tab-bewertung')" id="btn-tab-bewertung">
+        <span>5. Risikobewertung (PSS)</span>
+        <span class="tab-badge-err" id="tabBadge5" style="display: none;">!</span>
+      </div>
+    </div>
+
+    <!-- TAB CONTENTS -->
+    <div class="tab-content-area">
+
+      <!-- TAB 1: ANRUFER & PATIENT -->
+      <div id="tab-caller-patient" class="tab-pane">
+        
+        <!-- Header & Berater Section -->
+        <div class="section-card">
+          <div class="section-header" onclick="toggleCard(this)">
+            <span>📋 Metadaten & Berater</span>
+            <span>▼</span>
+          </div>
+          <div class="section-body">
+            <div class="grid-4">
+              <div class="fg">
+                <label class="fl">Berater/in (Name/Vorname, Nr.)</label>
+                <input type="text" id="c_berater" value="Petra Förster" oninput="updateChecker()">
+              </div>
+              <div class="fg">
+                <label class="fl">Uhrzeit</label>
+                <input type="time" id="c_uhrzeit" value="13:30">
+              </div>
+              <div class="fg">
+                <label class="fl">Anrufart</label>
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                  <label class="pill"><input type="radio" name="c_anrufart" value="Anfrage" checked> Anfrage</label>
+                  <label class="pill"><input type="radio" name="c_anrufart" value="Folgeanruf"> Folgeanruf</label>
+                </div>
+              </div>
+              <div class="fg">
+                <label class="fl">Zusatz-Flags</label>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                  <label class="pill"><input type="checkbox" id="c_tier"> Tier</label>
+                  <label class="pill"><input type="checkbox" id="c_fub"> FU-B</label>
+                  <label class="pill"><input type="checkbox" id="c_futel"> FU-Tel</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anrufer Section -->
+        <div class="section-card">
+          <div class="section-header" onclick="toggleCard(this)">
+            <span>📞 Anrufer-Identifikation & Rückrufsicherheit</span>
+            <span>▼</span>
+          </div>
+          <div class="section-body">
+            <div class="fg">
+              <label class="fl">Anrufer-Kategorie</label>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <label class="pill"><input type="radio" name="c_anrufer_typ" value="Laie"> Laie</label>
+                <label class="pill"><input type="radio" name="c_anrufer_typ" value="Klinik"> Klinik / KH</label>
+                <label class="pill"><input type="radio" name="c_anrufer_typ" value="Praxis"> Praxis</label>
+                <label class="pill"><input type="radio" name="c_anrufer_typ" value="RTW"> RTW</label>
+                <label class="pill"><input type="radio" name="c_anrufer_typ" value="Notarzt" checked> Notarzt</label>
+                <label class="pill"><input type="radio" name="c_anrufer_typ" value="KV"> KV-Notdienst</label>
+                <label class="pill"><input type="radio" name="c_anrufer_typ" value="Leitstelle"> Leitstelle</label>
+                <label class="pill"><input type="radio" name="c_anrufer_typ" value="Veterinär"> Veterinär</label>
+                <label class="pill">Sonstige: <input type="text" id="c_anr_sonst" style="width: 80px;"></label>
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 8px;">
+              <div class="fg">
+                <label class="fl">Name des Anrufers</label>
+                <div style="display: flex; gap: 6px;">
+                  <select id="c_anrede" style="width: 75px;">
+                    <option value="Frau">Frau</option>
+                    <option value="Herr" selected>Herr</option>
+                  </select>
+                  <input type="text" id="c_anrufer_name" placeholder="Dr. Keller, Martin" oninput="updateChecker()">
+                </div>
+              </div>
+              <div class="fg">
+                <label class="fl"><strong>Rückrufnummer / E-Mail (Obligatorisch)</strong></label>
+                <input type="text" id="c_anrufer_tel" placeholder="0172-5551234" style="font-weight: 700; border-color: #2563eb;" oninput="updateChecker()">
+              </div>
+            </div>
+
+            <div class="fg">
+              <label class="fl">PLZ / Ort / Klinik / Krankenhaus / ggf. Land</label>
+              <input type="text" id="c_anrufer_ort" placeholder="NEF Bonn 1 / Waldrand Röttgen" oninput="updateChecker()">
+            </div>
+
+            <div class="fg">
+              <label class="fl">Abteilung (bei Klinik-Anrufern)</label>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                <label class="pill"><input type="checkbox" id="c_abt_innere"> Innere</label>
+                <label class="pill"><input type="checkbox" id="c_abt_psych"> Psychiatrie</label>
+                <label class="pill"><input type="checkbox" id="c_abt_zna"> ZNA</label>
+                <label class="pill"><input type="checkbox" id="c_abt_its"> Intensiv</label>
+                <label class="pill"><input type="checkbox" id="c_abt_paed"> Kinderklinik/Pädiatrie</label>
+                <label class="pill"><input type="checkbox" id="c_abt_chir"> Chirurgie</label>
+                <label class="pill"><input type="checkbox" id="c_abt_darzt"> D-Arzt</label>
+                <label class="pill">Sonstige: <input type="text" id="c_abt_sonst" style="width: 80px;"></label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Patient Section -->
+        <div class="section-card">
+          <div class="section-header" onclick="toggleCard(this)">
+            <span>👤 Patientendaten & Biometrie</span>
+            <span>▼</span>
+          </div>
+          <div class="section-body">
+            <div class="grid-3">
+              <div class="fg">
+                <label class="fl">Patient Name, Vorname oder Tierart</label>
+                <input type="text" id="c_pat_name" placeholder="Schmidt, Hans" style="font-weight: 700;" oninput="updateChecker()">
+              </div>
+              <div class="fg">
+                <label class="fl">Fall-Nr.</label>
+                <input type="text" id="c_pat_fallnr" placeholder="RD-2026-4412">
+              </div>
+              <div class="fg">
+                <label class="fl">Geburtsdatum</label>
+                <input type="date" id="c_pat_geb" onchange="autoCalcAgeC()">
+              </div>
+            </div>
+
+            <div class="grid-3" style="margin-top: 6px; background: #f8fafc; padding: 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+              <div class="fg">
+                <label class="fl">Alter & Einheit</label>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <input type="number" id="c_alter_val" value="62" style="width: 50px;" oninput="updateChecker()">
+                  <label class="pill"><input type="radio" name="c_alt_unit" value="Jahre" checked onchange="updateChecker()"> J.</label>
+                  <label class="pill"><input type="radio" name="c_alt_unit" value="Monate" onchange="updateChecker()"> M.</label>
+                  <label class="pill"><input type="radio" name="c_alt_unit" value="Tage" onchange="updateChecker()"> T.</label>
+                </div>
+              </div>
+
+              <div class="fg" style="grid-column: span 2;">
+                <label class="fl">Alterskategorie</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                  <label class="pill"><input type="radio" name="c_kat" id="c_kat_neugeb"> Neugeb.</label>
+                  <label class="pill"><input type="radio" name="c_kat" id="c_kat_saeug"> Säugling</label>
+                  <label class="pill"><input type="radio" name="c_kat" id="c_kat_klein"> Kleinkind</label>
+                  <label class="pill"><input type="radio" name="c_kat" id="c_kat_kind"> Kind</label>
+                  <label class="pill"><input type="radio" name="c_kat" id="c_kat_jugend"> Jugend</label>
+                  <label class="pill"><input type="radio" name="c_kat" id="c_kat_erw" checked> Erwachsen (18+)</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-3" style="margin-top: 8px;">
+              <div class="fg">
+                <label class="fl">Geschlecht</label>
+                <div style="display: flex; gap: 6px;">
+                  <label class="pill"><input type="radio" name="c_sex" value="m" checked onchange="updateChecker()"> m</label>
+                  <label class="pill"><input type="radio" name="c_sex" value="w" onchange="updateChecker()"> w</label>
+                  <label class="pill"><input type="radio" name="c_sex" value="div" onchange="updateChecker()"> div</label>
+                </div>
+              </div>
+              <div class="fg">
+                <label class="fl">Stillzeit / Schwangerschaft</label>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <label class="pill"><input type="checkbox" id="c_stillzeit"> Stillzeit</label>
+                  <label class="pill"><input type="checkbox" id="c_schwanger"> schwanger</label>
+                  <input type="number" id="c_ssw" placeholder="SSW" style="width: 45px;">
+                </div>
+              </div>
+              <div class="fg">
+                <label class="fl">Körpergewicht & Größe</label>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <input type="number" id="c_kg" placeholder="78" style="width: 55px;" step="0.1" oninput="updateChecker()"> <span>kg</span>
+                  <input type="number" id="c_cm" placeholder="176" style="width: 55px;" oninput="updateChecker()"> <span>cm</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 2: NOXEN & SUBSTANZEN -->
+      <div id="tab-noxen" class="tab-pane" style="display: none;">
+        
+        <!-- Exposition Context -->
+        <div class="section-card">
+          <div class="section-header" onclick="toggleCard(this)">
+            <span>⏰ Expositions-Modalitäten (Wann, Wo, Warum, Wie)</span>
+            <span>▼</span>
+          </div>
+          <div class="section-body">
+            <div class="grid-4">
+              <!-- Zeitpunkt -->
+              <div class="fg" style="background: #f8fafc; padding: 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                <label class="fl">Zeitpunkt Erstkontakt</label>
+                <div style="display: flex; gap: 4px; margin-bottom: 4px;">
+                  <label class="pill"><input type="radio" name="c_z_pr" checked> vor</label>
+                  <label class="pill"><input type="radio" name="c_z_pr"> um</label>
+                  <label class="pill"><input type="radio" name="c_z_pr"> über</label>
+                </div>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <input type="text" id="c_z_val" placeholder="8" style="width: 45px;" oninput="updateChecker()">
+                  <select id="c_z_unit" style="width: 75px;" onchange="updateChecker()">
+                    <option value="Min">Min</option>
+                    <option value="Std" selected>Std</option>
+                    <option value="Tage">Tage</option>
+                    <option value="Monate">Monate</option>
+                    <option value="Jahre">Jahre</option>
+                  </select>
+                </div>
+                <div style="margin-top: 6px; display: flex; gap: 2px;">
+                  <button type="button" class="chip-btn active" onclick="toggleChip(this)">A</button>
+                  <button type="button" class="chip-btn" onclick="toggleChip(this)">S</button>
+                  <button type="button" class="chip-btn" onclick="toggleChip(this)">C</button>
+                  <button type="button" class="chip-btn" onclick="toggleChip(this)">B</button>
+                  <button type="button" class="chip-btn" onclick="toggleChip(this)">U</button>
+                </div>
+              </div>
+
+              <!-- Ätiologie -->
+              <div class="fg" style="background: #f8fafc; padding: 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                <label class="fl">Ätiologie</label>
+                <div style="display: flex; flex-direction: column; gap: 2px; max-height: 120px; overflow-y: auto;">
+                  <label class="pill"><input type="checkbox" id="c_aet_akzid" checked> akzidentiell</label>
+                  <label class="pill"><input type="checkbox" id="c_aet_suizid"> suizidal</label>
+                  <label class="pill"><input type="checkbox" id="c_aet_abusus"> Abusus</label>
+                  <label class="pill"><input type="checkbox" id="c_aet_unbek"> unbekannt</label>
+                  <label class="pill"><input type="checkbox" id="c_aet_gewerb"> gewerblich</label>
+                  <label class="pill"><input type="checkbox" id="c_aet_nw"> Nebenwirkung</label>
+                  <label class="pill"><input type="checkbox" id="c_aet_umwelt"> Umwelt</label>
+                  <label class="pill"><input type="checkbox" id="c_aet_psych"> Psychose</label>
+                  <label class="pill"><input type="checkbox" id="c_aet_gift"> Giftbeibringung</label>
+                  <label class="pill"><input type="checkbox" id="c_aet_caregiver"> Fehlgabe Caregiver</label>
+                  <label class="pill"><input type="checkbox" id="c_aet_iatrogen"> iatrogen</label>
+                </div>
+                <input type="text" id="c_aet_txt" placeholder="Bemerkung" style="margin-top: 4px;">
+              </div>
+
+              <!-- Ort -->
+              <div class="fg" style="background: #f8fafc; padding: 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                <label class="fl">Ort</label>
+                <div style="display: flex; flex-direction: column; gap: 2px; max-height: 120px; overflow-y: auto;">
+                  <label class="pill"><input type="checkbox" id="c_ort_haus"> Haus</label>
+                  <label class="pill"><input type="checkbox" id="c_ort_wald" checked> im Freien (Wald)</label>
+                  <label class="pill"><input type="checkbox" id="c_ort_garten"> Garten</label>
+                  <label class="pill"><input type="checkbox" id="c_ort_spiel"> Spielplatz</label>
+                  <label class="pill"><input type="checkbox" id="c_ort_kiga"> KiGa-KiTa</label>
+                  <label class="pill"><input type="checkbox" id="c_ort_schule"> Schule</label>
+                  <label class="pill"><input type="checkbox" id="c_ort_kh"> Krankenhaus</label>
+                  <label class="pill"><input type="checkbox" id="c_ort_unbek"> unbekannt</label>
+                </div>
+                <input type="text" id="c_ort_txt" placeholder="Bemerkung" style="margin-top: 4px;">
+              </div>
+
+              <!-- Route -->
+              <div class="fg" style="background: #f8fafc; padding: 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                <label class="fl">Expositionsroute</label>
+                <div style="display: flex; flex-direction: column; gap: 2px; max-height: 120px; overflow-y: auto;">
+                  <label class="pill"><input type="checkbox" id="c_route_oral" checked> oral</label>
+                  <label class="pill"><input type="checkbox" id="c_route_inhal"> inhalativ</label>
+                  <label class="pill"><input type="checkbox" id="c_route_haut"> Haut</label>
+                  <label class="pill"><input type="checkbox" id="c_route_auge"> Auge</label>
+                  <label class="pill"><input type="checkbox" id="c_route_nasal"> nasal</label>
+                  <label class="pill"><input type="checkbox" id="c_route_iv"> i.v.</label>
+                  <label class="pill"><input type="checkbox" id="c_route_stich"> Stich / Biss</label>
+                  <label class="pill"><input type="checkbox" id="c_route_weichteile"> Weichteile</label>
+                </div>
+                <input type="text" id="c_route_txt" placeholder="Bemerkung" style="margin-top: 4px;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7-Row Substance Table -->
+        <div class="section-card">
+          <div class="section-header" onclick="toggleCard(this)">
+            <span>🧪 Substanztabelle (Toxische Agenzien, 7 Zeilen)</span>
+            <span>▼</span>
+          </div>
+          <div class="section-body">
+            <table class="c-subst-table">
+              <thead>
+                <tr>
+                  <th style="width: 130px;">Exposition (G, N, K)</th>
+                  <th>Noxe / Handelsname / Inhaltsstoff</th>
+                  <th style="width: 140px;">Noxe-Flags</th>
+                  <th style="width: 180px;">Menge / Dosis</th>
+                  <th style="width: 140px;">Menge-Flags</th>
+                </tr>
+              </thead>
+              <tbody id="cSubstanceTbody">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 3: ANAMNESE & VITALS -->
+      <div id="tab-anamnese-vitals" class="tab-pane" style="display: none;">
+        
+        <div class="section-card">
+          <div class="section-header" onclick="toggleCard(this)">
+            <span>📝 Anamnese & Vorgeschichte</span>
+            <span>▼</span>
+          </div>
+          <div class="section-body">
+            <div class="fg">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                <label class="fl">Anamnese (aktuelles Ereignis)</label>
+                <label class="pill"><input type="checkbox" id="c_anam_beiblatt"> Beiblatt</label>
+              </div>
+              <textarea id="c_anam_txt" rows="4" placeholder="Schilderung des Notfallhergangs, Latenzzeit, erste Beschwerden..." oninput="updateChecker()"></textarea>
+            </div>
+            <div class="grid-2">
+              <div class="fg">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                  <label class="fl">VE (Vorerkrankungen / Vorereignisse)</label>
+                  <label class="pill"><input type="checkbox" id="c_ve_beiblatt"> Beiblatt</label>
+                </div>
+                <input type="text" id="c_ve_txt" placeholder="z. B. Hypertonie, Vorhofflimmern">
+              </div>
+              <div class="fg">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                  <label class="fl">VM (Vormedikation / Dauermedikation)</label>
+                  <label class="pill"><input type="checkbox" id="c_vm_beiblatt"> Beiblatt</label>
+                </div>
+                <input type="text" id="c_vm_txt" placeholder="z. B. Ramipril 5mg, ASS 100mg">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header" onclick="toggleCard(this)">
+            <span>🩺 Symptome & Klinische Befunde / Vitalwerte</span>
+            <span>▼</span>
+          </div>
+          <div class="section-body">
+            <div class="fg" style="background: #f8fafc; padding: 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+              <label class="fl">Symptom-Status</label>
+              <div style="display: flex; gap: 8px;">
+                <label class="pill"><input type="checkbox" id="c_symp_keine" onchange="updateChecker()"> keine Symptome</label>
+                <label class="pill"><input type="checkbox" id="c_symp_wach" checked onchange="updateChecker()"> wach und voll orientiert</label>
+                <label class="pill"><input type="checkbox" id="c_symp_fraglich" onchange="updateChecker()"> Zusammenhang fraglich</label>
+              </div>
+            </div>
+
+            <div class="grid-4" style="margin-top: 10px;">
+              <div class="fg" style="background: #fff; border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px;">
+                <label class="fl">GCS (3-15)</label>
+                <input type="number" id="c_v_gcs" placeholder="15" min="3" max="15" style="font-weight: 700; font-size: 13px;" oninput="updateChecker()">
+              </div>
+              <div class="fg" style="background: #fff; border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px;">
+                <label class="fl">SpO2 (%)</label>
+                <input type="number" id="c_v_spo2" placeholder="97" style="font-weight: 700; font-size: 13px;">
+              </div>
+              <div class="fg" style="background: #fff; border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px;">
+                <label class="fl">HF (/min)</label>
+                <input type="number" id="c_v_hf" placeholder="94" style="font-weight: 700; font-size: 13px;" oninput="updateChecker()">
+              </div>
+              <div class="fg" style="background: #fff; border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px;">
+                <label class="fl">RR (mmHg)</label>
+                <input type="text" id="c_v_rr" placeholder="135/85" style="font-weight: 700; font-size: 13px;" oninput="updateChecker()">
+              </div>
+              <div class="fg" style="background: #fff; border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px;">
+                <label class="fl">QTc (ms)</label>
+                <input type="number" id="c_v_qtc" placeholder="410">
+              </div>
+              <div class="fg" style="background: #fff; border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px;">
+                <label class="fl">pH-Wert</label>
+                <input type="text" id="c_v_ph" placeholder="7.36">
+              </div>
+              <div class="fg" style="background: #fff; border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px;">
+                <label class="fl">Temperatur (°C)</label>
+                <input type="number" id="c_v_temp" placeholder="37.2" step="0.1">
+              </div>
+              <div class="fg" style="background: #fff; border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px;">
+                <label class="fl">Blutzucker (BZ)</label>
+                <input type="number" id="c_v_bz" placeholder="112">
+              </div>
+            </div>
+
+            <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+              <span style="font-weight: 700;">Blutalkohol (Ethanol):</span>
+              <input type="number" id="c_v_ethanol" placeholder="0.00" step="0.01" style="width: 60px;">
+              <label class="pill"><input type="radio" name="c_eth_un" value="mg/L"> mg/L</label>
+              <label class="pill"><input type="radio" name="c_eth_un" value="promille" checked> ‰</label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 4: MASSNAHMEN & THERAPIE -->
+      <div id="tab-therapie" class="tab-pane" style="display: none;">
+        
+        <!-- EVA Zusatz -->
+        <div class="section-card" style="border-color: #93c5fd; background: #eff6ff;">
+          <div class="section-body" style="padding: 8px 12px;">
+            <strong style="color: #1e40af;">in EVA-1.0 Feld „Zusatz“ beachten:</strong>
+            <div style="display: flex; gap: 14px; margin-top: 4px; flex-wrap: wrap;">
+              <div>caregiver: <label class="pill"><input type="checkbox" id="cz_care_fam"> Familie</label> <label class="pill"><input type="checkbox" id="cz_care_betr"> Betreuung</label></div>
+              <div>KH/Klinik: <label class="pill"><input type="checkbox" id="cz_kh_som" checked> somatisch</label> <label class="pill"><input type="checkbox" id="cz_kh_psych"> Psychiatrie</label></div>
+              <div>Monitoring: <label class="pill"><input type="checkbox" id="cz_mon_allg"> Klinik allg.</label> <label class="pill"><input type="checkbox" id="cz_mon_zna"> Notaufn.</label> <label class="pill"><input type="checkbox" id="cz_mon_its" checked> Intensiv</label> <label class="pill"><input type="checkbox" id="cz_mon_imc"> IMC</label></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Main therapies -->
+          <div class="section-card">
+            <div class="section-header">
+              <span>Interventionen & Maßnahmen</span>
+              <span style="font-size: 10px; color: #64748b;">(v = vorher | e = empf. | g = geg.)</span>
+            </div>
+            <div class="section-body" style="padding: 4px 8px; max-height: 440px; overflow-y: auto;" id="cTherapiesList">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Specific Meds -->
+          <div class="section-card">
+            <div class="section-header">
+              <span>Spezifische Medikation & Antidote</span>
+              <span style="font-size: 10px; color: #64748b;">(e = empfohlen | g = gegeben)</span>
+            </div>
+            <div class="section-body" style="padding: 4px 8px; max-height: 440px; overflow-y: auto;" id="cMedsList">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 5: RISIKOBEWERTUNG (PSS) -->
+      <div id="tab-bewertung" class="tab-pane" style="display: none;">
+        
+        <div class="section-card">
+          <div class="section-header">
+            <span>⚖️ Poisoning Severity Score (PSS) Einstufung</span>
+          </div>
+          <div class="section-body">
+            <div class="grid-2">
+              <!-- PSS vor/bei Anruf -->
+              <div style="background: #f8fafc; padding: 10px; border-radius: 5px; border: 1px solid #cbd5e1;">
+                <label class="fl" style="font-size: 12px;">PSS vor / bei Anruf (Ist-Zustand)</label>
+                <div class="pss-grid" id="cPssVorBox">
+                  <div class="pss-box" onclick="setCPssVor('0')">⓪ Keine</div>
+                  <div class="pss-box" onclick="setCPssVor('1')">① Leicht</div>
+                  <div class="pss-box active-2" onclick="setCPssVor('2')">② Mittel</div>
+                  <div class="pss-box" onclick="setCPssVor('3')">③ Schwer</div>
+                  <div class="pss-box" onclick="setCPssVor('4')">④ Letal</div>
+                  <div class="pss-box" onclick="setCPssVor('U')">U Unbek.</div>
+                </div>
+                <div id="cPssVorLabel" style="margin-top: 6px; font-weight: 700; color: #ea580c;">Grad 2: Mittelschwere Vergiftungssymptome</div>
+              </div>
+
+              <!-- max PSS potentiell -->
+              <div style="background: #f8fafc; padding: 10px; border-radius: 5px; border: 1px solid #cbd5e1;">
+                <label class="fl" style="font-size: 12px;">max. PSS potentiell (Prognose / Worst-Case)</label>
+                <div class="pss-grid" id="cPssPotBox">
+                  <div class="pss-box" onclick="setCPssPot('0')">⓪ Keine</div>
+                  <div class="pss-box" onclick="setCPssPot('1')">① Leicht</div>
+                  <div class="pss-box" onclick="setCPssPot('2')">② Mittel</div>
+                  <div class="pss-box active-3" onclick="setCPssPot('3')">③ Schwer</div>
+                  <div class="pss-box" onclick="setCPssPot('4')">④ Letal</div>
+                  <div class="pss-box" onclick="setCPssPot('U')">U Unbek.</div>
+                </div>
+                <div id="cPssPotLabel" style="margin-top: 6px; font-weight: 700; color: #dc2626;">Grad 3: Schwere lebensbedrohliche Vergiftung (Leberversagen) möglich!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <span>🏥 Wegen Noxe empfohlenes Prozedere</span>
+          </div>
+          <div class="section-body">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <label class="pill"><input type="checkbox" id="cp_keines"> keines</label>
+              <label class="pill"><input type="checkbox" id="cp_laie"> Laie</label>
+              <label class="pill"><input type="checkbox" id="cp_ambulant"> ambulant</label>
+              <label class="pill"><input type="checkbox" id="cp_stationaer"> stationär</label>
+              <label class="pill" style="font-weight: 700;"><input type="checkbox" id="cp_its" checked onchange="updateChecker()"> Intensiv / IMC</label>
+              <label class="pill"><input type="checkbox" id="cp_nichtentsch"> nicht zu entsch.</label>
+              <label class="pill"><input type="checkbox" id="cp_beiblatt"> Beiblatt</label>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: right; margin-top: 10px;">
+          <button class="btn-action btn-green" style="font-size: 13px; padding: 8px 18px; margin-left: auto;" onclick="saveProtocolC()">
+            💾 Protokoll abschließen & validieren
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT PANE: LIVE CASE DOSSIER & COMPLETENESS CHECKER -->
+  <div class="right-pane">
+    <div class="right-header">
+      <span>Falldossier & Validierung</span>
+      <span style="font-size: 10px; background: #3b82f6; padding: 1px 5px; border-radius: 3px;">Live</span>
+    </div>
+
+    <div class="right-content">
+      
+      <!-- COMPLETENESS CHECKER WIDGET -->
+      <div class="validation-box" id="validationCard">
+        <div class="validation-header">
+          <span style="color: #1e293b;">Vollständigkeits-Checker</span>
+          <span id="completenessScore" style="font-weight: 800; color: #059669;">100% Bereit</span>
+        </div>
+        <ul class="validation-list" id="validationList">
+          <!-- Rendered via JS -->
+        </ul>
+      </div>
+
+      <!-- SOURCES CHECKBOX MATRIX -->
+      <div class="dossier-card">
+        <div class="dossier-title">Recherchequellen</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+          <label class="pill"><input type="checkbox" id="cq_bonntox" checked> BonnTox</label>
+          <label class="pill"><input type="checkbox" id="cq_muehlendahl"> Mühlendahl</label>
+          <label class="pill"><input type="checkbox" id="cq_poisindex" checked> Poisindex</label>
+          <label class="pill"><input type="checkbox" id="cq_toxinz"> Toxinz</label>
+          <label class="pill"><input type="checkbox" id="cq_gestis"> GESTIS</label>
+          <label class="pill"><input type="checkbox" id="cq_tdi"> TDI</label>
+          <label class="pill"><input type="checkbox" id="cq_sdb"> SDB</label>
+          <label class="pill"><input type="checkbox" id="cq_eva" checked> EVA</label>
+        </div>
+      </div>
+
+      <!-- LIVE DOSSIER SUMMARY -->
+      <div class="dossier-card">
+        <div class="dossier-title">Triage-Zusammenfassung</div>
+        <div class="dossier-row"><span>Rückruf:</span> <strong id="dosTel">0172-5551234</strong></div>
+        <div class="dossier-row"><span>Patient:</span> <strong id="dosPat">Schmidt, Hans (62 J., m)</strong></div>
+        <div class="dossier-row"><span>Gewicht:</span> <strong id="dosKg">78 kg</strong></div>
+        <div class="dossier-row"><span>Primäre Noxe:</span> <strong id="dosNoxe">Knollenblätterpilz</strong></div>
+        <div class="dossier-row"><span>Menge / Dosis:</span> <strong id="dosMenge">ca. 2 Pilze</strong></div>
+        <div class="dossier-row"><span>Latenzzeit:</span> <strong id="dosLatenz">vor ca. 8 Std.</strong></div>
+      </div>
+
+      <div class="dossier-card">
+        <div class="dossier-title">Klinischer Status</div>
+        <div class="dossier-row"><span>GCS:</span> <strong id="dosGcs">15</strong></div>
+        <div class="dossier-row"><span>Kreislauf:</span> <strong id="dosCirc">94/min | 135/85</strong></div>
+        <div class="dossier-row"><span>PSS Vor / Pot.:</span> <strong id="dosPss">Grad 2 / Grad 3</strong></div>
+        <div class="dossier-row"><span>Prozedere:</span> <strong id="dosProz">Intensiv / IMC</strong></div>
+      </div>
+
+      <!-- Quick Action Checklist -->
+      <div class="dossier-card" style="background: #fffbeb; border-color: #fde68a;">
+        <div class="dossier-title" style="color: #b45309;">Notfall-Checkliste</div>
+        <label style="display: block; margin-bottom: 2px;"><input type="checkbox" checked> Giftprobe / Asservat sicherstellen</label>
+        <label style="display: block; margin-bottom: 2px;"><input type="checkbox" checked> Pilzsachverständigen (PSV) hinzuziehen</label>
+        <label style="display: block; margin-bottom: 2px;"><input type="checkbox" checked> Silibinin / Legalon i.v. empfohlen</label>
+        <label style="display: block;"><input type="checkbox" checked> N-Acetylcystein (ACC) prolongiert</label>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div id="statusToast" class="status-toast"></div>
+
+<script>
+  // 1. Build Substance Table (7 rows)
+  const cSubstTbody = document.getElementById('cSubstanceTbody');
+  for (let i = 1; i <= 7; i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div style="display: flex; gap: 2px;">
+          <button type="button" class="chip-btn ${i===1?'active':''}" onclick="setExpoChipC(${i}, 'G')" id="cexp_${i}_G">G</button>
+          <button type="button" class="chip-btn" onclick="setExpoChipC(${i}, 'N')" id="cexp_${i}_N">N</button>
+          <button type="button" class="chip-btn" onclick="setExpoChipC(${i}, 'K')" id="cexp_${i}_K">K</button>
+        </div>
+      </td>
+      <td>
+        <input type="text" id="cnoxe_${i}" placeholder="${i===1?'z. B. Knollenblätterpilz (Amanita phalloides)':'Weitere Noxe'}" oninput="updateChecker()">
+      </td>
+      <td>
+        <div style="display: flex; gap: 2px;">
+          <button type="button" class="chip-btn ${i===1?'active':''}" onclick="toggleChip(this)">G</button>
+          <button type="button" class="chip-btn" onclick="toggleChip(this)">N</button>
+          <button type="button" class="chip-btn" onclick="toggleChip(this)">K</button>
+          <button type="button" class="chip-btn ${i===1?'active':''}" onclick="toggleChip(this)">T</button>
+        </div>
+      </td>
+      <td>
+        <input type="text" id="cmenge_${i}" placeholder="${i===1?'ca. 2 Pilzkappen verzehrt':'Menge'}" oninput="updateChecker()">
+      </td>
+      <td>
+        <div style="display: flex; gap: 2px;">
+          <button type="button" class="chip-btn ${i===1?'active':''}" onclick="toggleChip(this)">G</button>
+          <button type="button" class="chip-btn" onclick="toggleChip(this)">N</button>
+          <button type="button" class="chip-btn" onclick="toggleChip(this)">U</button>
+          <button type="button" class="chip-btn ${i===1?'active':''}" onclick="toggleChip(this)">max</button>
+        </div>
+      </td>
+    `;
+    cSubstTbody.appendChild(tr);
+  }
+
+  function setExpoChipC(row, flag) {
+    ['G', 'N', 'K'].forEach(f => {
+      const el = document.getElementById(`cexp_${row}_${f}`);
+      if (el) el.classList.toggle('active', f === flag);
+    });
+  }
+
+  function toggleChip(chip) {
+    chip.classList.toggle('active');
+  }
+
+  // 2. Build Tab 4 Therapies and Meds
+  const cTherapies = [
+    { id: 'keine', name: 'Keine' },
+    { id: 'symptominfo', name: 'Symptominfo telefonisch / FAX' },
+    { id: 'ueberwach', name: 'Überwachung' },
+    { id: 'spuelen', name: 'Spülen' },
+    { id: 'fluessigkeit', name: 'Flüssigkeit oral' },
+    { id: 'entschaeumen', name: 'Entschäumen' },
+    { id: 'wg_noxe_arzt', name: 'wg. Noxe Ärztl. Untersuchung' },
+    { id: 'wg_symp_arzt', name: 'wg. Symptom Ärztl. Untersuchung' },
+    { id: 'symptomatisch', name: 'Symptomat. Therapie/Massnahmen' },
+    { id: 'kohle', name: 'Aktivkohle repetitiv/prolongiert' },
+    { id: 'labor', name: 'Labor' },
+    { id: 'blutspiegel', name: 'Blutspiegel' },
+    { id: 'antidot', name: 'Antidot (ACC / Flumazenil / Naloxon)' },
+    { id: 'volumen', name: 'Volumentherapie i.v.' },
+    { id: 'veraetzung', name: 'Verätzungsschema' },
+    { id: 'cortison', name: 'Cortison i.v./inhal./lokal' },
+    { id: 'magenspuel', name: 'Magenspül. (Endo / Intub.schutz)' },
+    { id: 'intubation', name: 'Intubation / Beatmung' },
+    { id: 'giftelim', name: 'sek. Giftelim. (HD / lipid rescue)' },
+    { id: 'produktinfo', name: 'Produktinformation / SDB' },
+    { id: 'bestimmung', name: 'Bestimmung Noxe und Wiederanruf' },
+    { id: 'pilz', name: 'Pilzsachverständige PSV' },
+    { id: 'rueckruf_giz', name: 'Rückruf durch GIZ' },
+    { id: 'kontakt_empf', name: 'GIZ empfiehlt Kontaktaufnahme' }
+  ];
+
+  const cTherapiesContainer = document.getElementById('cTherapiesList');
+  cTherapies.forEach(t => {
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems = 'center';
+    row.style.padding = '3px 0';
+    row.style.borderBottom = '1px solid #f1f5f9';
+    row.innerHTML = `
+      <span style="font-weight: 500;">${t.name}</span>
+      <div style="display: flex; gap: 8px;">
+        <label><input type="checkbox" id="cth_${t.id}_v"> v</label>
+        <label><input type="checkbox" id="cth_${t.id}_e"> e</label>
+        <label><input type="checkbox" id="cth_${t.id}_g"> g</label>
+      </div>
+    `;
+    cTherapiesContainer.appendChild(row);
+  });
+
+  const cMeds = ['Benzodiaz', 'NaBi', 'Mg++', 'Katecholamin', 'Biperiden', "E'lyt-Subst.", 'Glukose', 'ß-Blocker', 'Vitamin B1', 'Lidocain', 'Temp.Kontr.', 'kühlen', 'Physostig'];
+  const cMedsContainer = document.getElementById('cMedsList');
+  cMeds.forEach(m => {
+    const slug = m.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems = 'center';
+    row.style.padding = '3px 0';
+    row.style.borderBottom = '1px solid #f1f5f9';
+    row.innerHTML = `
+      <span style="font-weight: 600;">${m}</span>
+      <div style="display: flex; gap: 8px;">
+        <label><input type="checkbox" id="cmed_${slug}_e"> e</label>
+        <label><input type="checkbox" id="cmed_${slug}_g"> g</label>
+      </div>
+    `;
+    cMedsContainer.appendChild(row);
+  });
+
+  // 3. Tab Switching
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(tabId).style.display = 'block';
+    document.getElementById('btn-' + tabId).classList.add('active');
+  }
+
+  function toggleCard(header) {
+    const body = header.nextElementSibling;
+    const arrow = header.querySelector('span:last-child');
+    if (body.style.display === 'none') {
+      body.style.display = 'block';
+      arrow.textContent = '▼';
+    } else {
+      body.style.display = 'none';
+      arrow.textContent = '▶';
+    }
+  }
+
+  function toggleAllSections() {
+    const bodies = document.querySelectorAll('.section-body');
+    const isAnyHidden = Array.from(bodies).some(b => b.style.display === 'none');
+    bodies.forEach(b => b.style.display = isAnyHidden ? 'block' : 'none');
+    document.querySelectorAll('.section-header span:last-child').forEach(s => s.textContent = isAnyHidden ? '▼' : '▶');
+  }
+
+  // 4. PSS Logic
+  let cPssVor = '2';
+  let cPssPot = '3';
+  const pssDescMap = {
+    '0': 'Grad 0: Keine Symptome',
+    '1': 'Grad 1: Leichte Symptome',
+    '2': 'Grad 2: Mittelschwere Vergiftung',
+    '3': 'Grad 3: Schwere lebensbedrohliche Vergiftung',
+    '4': 'Grad 4: Letaler Ausgang',
+    'U': 'Grad U: Nicht beurteilbar'
+  };
+
+  function setCPssVor(val) {
+    cPssVor = val;
+    const boxes = document.querySelectorAll('#cPssVorBox .pss-box');
+    const keys = ['0','1','2','3','4','U'];
+    boxes.forEach((b, idx) => {
+      b.className = 'pss-box';
+      if (keys[idx] === val) b.classList.add('active-' + val.toLowerCase());
+    });
+    document.getElementById('cPssVorLabel').textContent = pssDescMap[val];
+    updateChecker();
+  }
+
+  function setCPssPot(val) {
+    cPssPot = val;
+    const boxes = document.querySelectorAll('#cPssPotBox .pss-box');
+    const keys = ['0','1','2','3','4','U'];
+    boxes.forEach((b, idx) => {
+      b.className = 'pss-box';
+      if (keys[idx] === val) b.classList.add('active-' + val.toLowerCase());
+    });
+    document.getElementById('cPssPotLabel').textContent = pssDescMap[val];
+    updateChecker();
+  }
+
+  // 5. Completeness Checker & Live Dossier Update
+  function updateChecker() {
+    const az = document.getElementById('c_az').value.trim();
+    const callerTel = document.getElementById('c_anrufer_tel').value.trim();
+    const callerName = document.getElementById('c_anrufer_name').value.trim();
+    const patName = document.getElementById('c_pat_name').value.trim();
+    const alter = document.getElementById('c_alter_val').value.trim();
+    const noxe = document.getElementById('cnoxe_1').value.trim();
+    const menge = document.getElementById('cmenge_1').value.trim();
+    const pss = cPssPot;
+    const prozIts = document.getElementById('cp_its').checked || document.getElementById('cp_stationaer').checked;
+
+    // Pinned Banner
+    document.getElementById('topCoreCaller').textContent = (callerName || 'Unbekannt') + ' (' + (callerTel || 'Keine Tel!') + ')';
+    document.getElementById('topCorePatient').textContent = (patName || 'Patient unbekannt') + ' • ' + (alter ? alter + ' J.' : '?');
+    document.getElementById('topCoreNoxe').textContent = (noxe || 'Keine Noxe erfasst!') + ' • PSS ' + pss;
+
+    // Dossier Card
+    document.getElementById('dosTel').textContent = callerTel || 'FEHLT';
+    document.getElementById('dosPat').textContent = `${patName || 'Unbekannt'} (${alter || '?'} J.)`;
+    document.getElementById('dosKg').textContent = (document.getElementById('c_kg').value || '?') + ' kg';
+    document.getElementById('dosNoxe').textContent = noxe || 'FEHLT';
+    document.getElementById('dosMenge').textContent = menge || 'FEHLT';
+    document.getElementById('dosLatenz').textContent = 'vor ' + (document.getElementById('c_z_val').value || '?') + ' ' + document.getElementById('c_z_unit').value;
+    document.getElementById('dosGcs').textContent = document.getElementById('c_v_gcs').value || '15';
+    document.getElementById('dosCirc').textContent = (document.getElementById('c_v_hf').value || '-') + '/min | ' + (document.getElementById('c_v_rr').value || '-');
+    document.getElementById('dosPss').textContent = 'Grad ' + cPssVor + ' / Grad ' + cPssPot;
+
+    // Checks list
+    const checks = [
+      { id: 1, label: 'Rückrufnummer vorhanden', ok: !!callerTel, tab: 'tabBadge1' },
+      { id: 2, label: 'Patientendaten (Name/Alter)', ok: (!!patName && !!alter), tab: 'tabBadge1' },
+      { id: 3, label: 'Leitnoxe & Dosis erfasst', ok: (!!noxe && !!menge), tab: 'tabBadge2' },
+      { id: 4, label: 'PSS Risikoeinstufung erfolgt', ok: !!pss, tab: 'tabBadge5' },
+      { id: 5, label: 'Prozedere festgelegt', ok: prozIts, tab: 'tabBadge5' }
+    ];
+
+    const listEl = document.getElementById('validationList');
+    listEl.innerHTML = '';
+    let okCount = 0;
+
+    checks.forEach(c => {
+      const li = document.createElement('li');
+      li.className = 'validation-item ' + (c.ok ? 'complete' : 'missing');
+      li.innerHTML = (c.ok ? '✅ ' : '⚠️ ') + c.label;
+      listEl.appendChild(li);
+      if (c.ok) okCount++;
+      
+      const badge = document.getElementById(c.tab);
+      if (badge) badge.style.display = c.ok ? 'none' : 'inline-flex';
+    });
+
+    const pct = Math.round((okCount / checks.length) * 100);
+    const scoreEl = document.getElementById('completenessScore');
+    scoreEl.textContent = pct + '% Bereit';
+    scoreEl.style.color = (pct === 100) ? '#059669' : (pct >= 60 ? '#d97706' : '#dc2626');
+    document.getElementById('validationCard').classList.toggle('has-errors', pct < 100);
+  }
+
+  function autoCalcAgeC() {
+    const val = document.getElementById('c_pat_geb').value;
+    if (!val) return;
+    const diff = new Date().getFullYear() - new Date(val).getFullYear();
+    document.getElementById('c_alter_val').value = diff;
+    updateChecker();
+  }
+
+  function showToast(text) {
+    const t = document.getElementById('statusToast');
+    t.textContent = text;
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 2600);
+  }
+
+  // Sample data (Amanita mushroom poisoning)
+  function loadSampleCaseC() {
+    document.getElementById('c_az').value = 'BN-2026-10494';
+    document.getElementById('c_anrufer_name').value = 'Dr. Keller, Martin (Notarzt)';
+    document.getElementById('c_anrufer_tel').value = '0172-5551234';
+    document.getElementById('c_anrufer_ort').value = 'NEF Bonn 1 / Einsatzort Röttgen';
+
+    document.getElementById('c_pat_name').value = 'Schmidt, Hans';
+    document.getElementById('c_pat_geb').value = '1964-03-21';
+    document.getElementById('c_alter_val').value = '62';
+    document.getElementById('c_kg').value = '78';
+    document.getElementById('c_cm').value = '176';
+
+    document.getElementById('c_z_val').value = '8';
+    document.getElementById('c_z_unit').value = 'Std';
+    document.getElementById('cnoxe_1').value = 'Grüner Knollenblätterpilz (Amanita phalloides)';
+    document.getElementById('cmenge_1').value = 'ca. 2 Pilzkappen mit Champignons verwechselt';
+
+    document.getElementById('c_anam_txt').value = 'Patient sammelte gestern Nachmittag Waldpilze und aß diese gestern Abend (vor ca. 8 Std.). Seit 2 Stunden heftigste choleriforme Diarrhoen, abdominelle Krämpfe, rezidivierendes Erbrechen. Stark dehydriert.';
+    document.getElementById('c_ve_txt').value = 'Arterielle Hypertonie.';
+    document.getElementById('c_vm_txt').value = 'Ramipril 5mg 1x tgl.';
+
+    document.getElementById('c_symp_keine').checked = false;
+    document.getElementById('c_symp_wach').checked = true;
+    document.getElementById('c_v_gcs').value = '15';
+    document.getElementById('c_v_hf').value = '94';
+    document.getElementById('c_v_rr').value = '105/65';
+    document.getElementById('c_v_spo2').value = '97';
+
+    // Therapies
+    document.getElementById('cth_volumen_e').checked = true;
+    document.getElementById('cth_volumen_g').checked = true;
+    document.getElementById('cth_labor_e').checked = true;
+    document.getElementById('cth_kohle_e').checked = true;
+    document.getElementById('cth_antidot_e').checked = true;
+    document.getElementById('cth_pilz_e').checked = true;
+    document.getElementById('cth_ueberwach_e').checked = true;
+
+    setCPssVor('2');
+    setCPssPot('3');
+    document.getElementById('cp_its').checked = true;
+
+    updateChecker();
+    showToast('Klinischer Beispielfall (Knollenblätterpilz-Intoxikation) geladen!');
+  }
+
+  function resetFormC() {
+    if (confirm('Hybrid-Workspace wirklich leeren?')) {
+      document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(e => e.value = '');
+      document.querySelectorAll('input[type="checkbox"]').forEach(e => e.checked = false);
+      setCPssVor('0');
+      setCPssPot('0');
+      updateChecker();
+      showToast('Workspace zurückgesetzt.');
+    }
+  }
+
+  function saveProtocolC() {
+    showToast('Fall BN-2026-10494 vollständig validiert und im Notfall-Archiv gespeichert!');
+  }
+
+  // Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.altKey && e.key.toLowerCase() === 'l') {
+      e.preventDefault();
+      loadSampleCaseC();
+    } else if (e.altKey && e.key.toLowerCase() === 'r') {
+      e.preventDefault();
+      resetFormC();
+    } else if (e.altKey && e.key === '1') {
+      switchTab('tab-caller-patient');
+    } else if (e.altKey && e.key === '2') {
+      switchTab('tab-noxen');
+    } else if (e.altKey && e.key === '3') {
+      switchTab('tab-anamnese-vitals');
+    } else if (e.altKey && e.key === '4') {
+      switchTab('tab-therapie');
+    } else if (e.altKey && e.key === '5') {
+      switchTab('tab-bewertung');
+    }
+  });
+
+  // Init
+  updateChecker();
+</script>
+</body>
+</html>

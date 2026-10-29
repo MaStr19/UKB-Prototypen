@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EVA-Protokoll 5.26 – GIZ Bonn (Prototyp A: Digital Form)</title>
+<style>
+  :root {
+    --bg-page: #e8ecf1;
+    --paper-bg: #ffffff;
+    --border-color: #2c3e50;
+    --border-light: #7f8c8d;
+    --text-main: #1a252f;
+    --text-muted: #576574;
+    --accent-blue: #0984e3;
+    --accent-green: #00b894;
+    --accent-red: #d63031;
+    --accent-amber: #e17055;
+    --highlight-bg: #f1f6fa;
+    --btn-primary: #1e3799;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 11px; }
+
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Top Control Toolbar */
+  .top-toolbar {
+    width: 100%;
+    max-width: 1120px;
+    background: #2c3e50;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+  .top-toolbar h1 {
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .top-toolbar .badge {
+    background: #0984e3;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .toolbar-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .toolbar-actions button {
+    background: #34495e;
+    color: white;
+    border: 1px solid #4b6584;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .toolbar-actions button:hover {
+    background: #4b6584;
+  }
+  .toolbar-actions button.btn-highlight {
+    background: #00b894;
+    border-color: #00a382;
+  }
+  .toolbar-actions button.btn-highlight:hover {
+    background: #00a382;
+  }
+
+  .status-toast {
+    position: fixed;
+    top: 50px;
+    right: 20px;
+    background: #27ae60;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    font-weight: 600;
+    font-size: 12px;
+    display: none;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  /* Paper Document Container */
+  .paper-container {
+    width: 100%;
+    max-width: 1120px;
+    background: var(--paper-bg);
+    border: 1.5px solid var(--border-color);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.12);
+    padding: 10px;
+    border-top: none;
+  }
+
+  /* Grid Layouts for Sections */
+  .form-section {
+    border: 1px solid var(--border-color);
+    margin-bottom: 4px;
+    background: #fff;
+  }
+
+  .grid-header {
+    display: grid;
+    grid-template-columns: 2.2fr 2fr 1.6fr 1fr;
+    border-bottom: 1.5px solid var(--border-color);
+  }
+  .header-cell {
+    padding: 4px 6px;
+    border-right: 1px solid var(--border-color);
+  }
+  .header-cell:last-child { border-right: none; }
+
+  /* Section Titles & Labels */
+  .field-title {
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+  .sub-label {
+    font-size: 9.5px;
+    color: var(--text-muted);
+  }
+
+  /* Inputs, Checkboxes, Radios */
+  input[type="text"], input[type="number"], input[type="time"], input[type="date"], textarea, select {
+    border: 1px solid #cbd5e1;
+    border-radius: 2px;
+    padding: 2px 4px;
+    font-size: 10.5px;
+    color: #0f172a;
+    background: #fff;
+    transition: border-color 0.1s, box-shadow 0.1s;
+    outline: none;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 1px rgba(9, 132, 227, 0.3);
+    background: #fdfefe;
+  }
+  input[type="checkbox"], input[type="radio"] {
+    cursor: pointer;
+    margin-right: 3px;
+    accent-color: #0984e3;
+    vertical-align: middle;
+  }
+  label {
+    cursor: pointer;
+    user-select: none;
+    margin-right: 6px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  /* Row 2: Anrufer & Quellen */
+  .grid-caller-sources {
+    display: grid;
+    grid-template-columns: 1fr 145px;
+    border-bottom: 1.5px solid var(--border-color);
+  }
+  .caller-box {
+    padding: 5px 6px;
+    border-right: 1.5px solid var(--border-color);
+  }
+  .sources-box {
+    padding: 4px 6px;
+    background: #fafbfc;
+  }
+  .sources-title {
+    font-weight: 800;
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 2px;
+    margin-bottom: 4px;
+  }
+  .sources-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5px;
+  }
+
+  /* Row 3: Patient */
+  .patient-box {
+    padding: 5px 6px;
+    border-bottom: 1.5px solid var(--border-color);
+  }
+  .patient-row-1 {
+    display: grid;
+    grid-template-columns: 3.5fr 1.5fr 1.5fr;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .patient-row-2 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    padding: 4px;
+    border: 1px solid #e2e8f0;
+    border-radius: 2px;
+  }
+
+  /* Row 4: Noxe (4 Columns) */
+  .noxe-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 2fr 1.6fr 2fr;
+    border-bottom: 1.5px solid var(--border-color);
+  }
+  .noxe-col {
+    padding: 5px 6px;
+    border-right: 1px solid var(--border-color);
+  }
+  .noxe-col:last-child { border-right: none; }
+
+  /* Substanztabelle (7 Rows) */
+  .substance-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-bottom: 1.5px solid var(--border-color);
+  }
+  .substance-table th {
+    background: #edf2f7;
+    font-weight: 700;
+    font-size: 10px;
+    padding: 3px 4px;
+    border: 1px solid #cbd5e1;
+    text-align: left;
+  }
+  .substance-table td {
+    padding: 2.5px 4px;
+    border: 1px solid #cbd5e1;
+    vertical-align: middle;
+  }
+  .substance-table tr:nth-child(even) {
+    background-color: #fafbfc;
+  }
+  .substance-table input[type="text"] {
+    width: 100%;
+  }
+
+  /* Mini Flags toggle buttons in table */
+  .flag-group {
+    display: inline-flex;
+    gap: 2px;
+    align-items: center;
+  }
+  .flag-btn {
+    border: 1px solid #b2bec3;
+    background: #f1f2f6;
+    padding: 1px 4px;
+    font-size: 9px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 2px;
+    user-select: none;
+  }
+  .flag-btn.active {
+    background: #2d3436;
+    color: white;
+    border-color: #2d3436;
+  }
+
+  /* Anamnese */
+  .anamnese-box {
+    padding: 5px 6px;
+    border-bottom: 1.5px solid var(--border-color);
+  }
+  .anamnese-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  /* Symptome / Befunde & Therapien */
+  .clinical-section {
+    display: grid;
+    grid-template-columns: 310px 1fr;
+    border-bottom: 1.5px solid var(--border-color);
+  }
+  .vitals-box {
+    padding: 5px 6px;
+    border-right: 1.5px solid var(--border-color);
+    background: #fbfcfd;
+  }
+  .vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    margin-top: 5px;
+  }
+  .vital-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    padding: 2px 4px;
+    border: 1px solid #e2e8f0;
+  }
+  .vital-item label { font-weight: 600; width: 45px; }
+  .vital-item input { width: 75px; text-align: right; }
+
+  /* Therapien Block */
+  .therapy-box {
+    padding: 5px 6px;
+  }
+  .therapy-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+  }
+  .eva-note-box {
+    background: #f8fafc;
+    border: 1px dashed #94a3b8;
+    padding: 3px 6px;
+    font-size: 9.5px;
+    border-radius: 3px;
+    max-width: 380px;
+  }
+  .therapy-columns-container {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    gap: 10px;
+  }
+  .therapy-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .therapy-table th {
+    font-size: 9.5px;
+    padding: 2px;
+    background: #edf2f7;
+    border: 1px solid #cbd5e1;
+    text-align: center;
+  }
+  .therapy-table td {
+    padding: 1.5px 3px;
+    border: 1px solid #e2e8f0;
+    font-size: 10px;
+  }
+  .therapy-table td.col-flag {
+    text-align: center;
+    width: 20px;
+  }
+  .med-matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .med-matrix-table th {
+    background: #edf2f7;
+    border: 1px solid #cbd5e1;
+    padding: 2px;
+    font-size: 9px;
+  }
+  .med-matrix-table td {
+    padding: 1.5px 3px;
+    border: 1px solid #e2e8f0;
+    font-size: 9.5px;
+  }
+
+  /* PSS & Prozedere (Bottom) */
+  .bottom-risk-section {
+    display: grid;
+    grid-template-columns: 240px 240px 1fr;
+    background: #fff;
+  }
+  .risk-cell {
+    padding: 6px;
+    border-right: 1.5px solid var(--border-color);
+  }
+  .risk-cell:last-child { border-right: none; }
+
+  .pss-scale {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .pss-btn {
+    flex: 1;
+    text-align: center;
+    border: 1.5px solid #bdc3c7;
+    padding: 3px 0;
+    border-radius: 4px;
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+    background: #f8f9fa;
+    user-select: none;
+    transition: all 0.15s;
+  }
+  .pss-btn:hover { background: #e9ecef; }
+  .pss-btn.active-0 { background: #2ecc71; color: white; border-color: #27ae60; }
+  .pss-btn.active-1 { background: #f1c40f; color: #2c3e50; border-color: #f39c12; }
+  .pss-btn.active-2 { background: #e67e22; color: white; border-color: #d35400; }
+  .pss-btn.active-3 { background: #e74c3c; color: white; border-color: #c0392b; }
+  .pss-btn.active-4 { background: #2c3e50; color: white; border-color: #000; }
+  .pss-btn.active-u { background: #95a5a6; color: white; border-color: #7f8c8d; }
+
+  /* Prozedere Pills */
+  .prozedere-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .proz-pill {
+    padding: 3px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 3px;
+    background: #f8fafc;
+    cursor: pointer;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .proz-pill.selected {
+    background: #1e3799;
+    color: white;
+    border-color: #0c2461;
+  }
+
+  /* Hotkey indicator */
+  .hk {
+    font-size: 8.5px;
+    background: rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.15);
+    padding: 0 3px;
+    border-radius: 2px;
+    margin-left: 2px;
+    color: #475569;
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .top-toolbar, .status-toast { display: none !important; }
+    .paper-container { box-shadow: none; border: 1px solid #000; max-width: 100%; width: 100%; }
+    input, textarea, select { border: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-toolbar">
+  <div>
+    <h1>GIZ Bonn &bull; Giftnotruf Dokumentation <span class="badge">Prototyp A: Digital Form</span></h1>
+  </div>
+  <div class="toolbar-actions">
+    <button type="button" class="btn-highlight" onclick="loadSampleData()" title="Alt+L">⚡ Beispieldaten laden <span class="hk">Alt+L</span></button>
+    <button type="button" onclick="clearForm()" title="Alt+R">🗑️ Formular leeren <span class="hk">Alt+R</span></button>
+    <button type="button" onclick="window.print()" title="Strg+P">🖨️ Drucken / PDF</button>
+    <button type="button" onclick="saveRecord()" title="Strg+S">💾 Speichern <span class="hk">Strg+S</span></button>
+  </div>
+</div>
+
+<div id="statusToast" class="status-toast"></div>
+
+<div class="paper-container" id="formContainer">
+
+  <!-- HEADER ROW -->
+  <div class="form-section grid-header">
+    <div class="header-cell">
+      <div class="field-title">Berater/in (Name/Vorname, Nr.)</div>
+      <input type="text" id="berater" value="Petra Förster" style="width: 100%; font-weight: 600;">
+    </div>
+    <div class="header-cell">
+      <div class="field-title" id="currentDateStr">Dienstag, 27. Oktober 2026</div>
+      <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+        <span class="sub-label">Uhrzeit:</span>
+        <input type="time" id="uhrzeit" value="13:26" style="font-weight: 700; width: 75px;">
+        <button type="button" onclick="setNowTime()" style="padding: 1px 5px; font-size: 9px; cursor: pointer;">Jetzt</button>
+      </div>
+    </div>
+    <div class="header-cell">
+      <div style="display: flex; gap: 8px; margin-bottom: 2px;">
+        <label><input type="radio" name="anruf_art" id="anruf_anfrage" checked> Anfrage</label>
+        <label><input type="radio" name="anruf_art" id="anruf_folge"> Folgeanruf</label>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <label><input type="checkbox" id="flag_tier"> Tier</label>
+        <label><input type="checkbox" id="flag_fub"> FU-B</label>
+        <label><input type="checkbox" id="flag_futel"> FU-Tel</label>
+      </div>
+    </div>
+    <div class="header-cell" style="background: #fafbfc;">
+      <div class="field-title" style="text-align: right;">AZ</div>
+      <input type="text" id="az" value="BN-2026-10492" style="width: 100%; font-weight: 700; text-align: right; color: #1e3799;">
+    </div>
+  </div>
+
+  <!-- CALLER & SOURCES ROW -->
+  <div class="form-section grid-caller-sources">
+    <div class="caller-box">
+      <div style="margin-bottom: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px;">
+        <span class="field-title" style="margin-right: 6px;">Anrufer:</span>
+        <label><input type="radio" name="anrufer_typ" value="Laie" checked> Laie</label>
+        <label><input type="radio" name="anrufer_typ" value="Klinik"> Klinik / KH</label>
+        <label><input type="radio" name="anrufer_typ" value="Praxis"> Praxis</label>
+        <label><input type="radio" name="anrufer_typ" value="RTW"> RTW</label>
+        <label><input type="radio" name="anrufer_typ" value="Notarzt"> Notarzt</label>
+        <label><input type="radio" name="anrufer_typ" value="KV"> KV-Notdienst</label>
+        <label><input type="radio" name="anrufer_typ" value="Leitstelle"> Leitstelle</label>
+        <label><input type="radio" name="anrufer_typ" value="Veterinaer"> Veterinär</label>
+        <label>Sonstige: <input type="text" id="anrufer_sonstige" style="width: 90px;"></label>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 6px; margin-bottom: 4px;">
+        <div>
+          <span class="sub-label">Name:</span>
+          <label style="margin-left: 4px;"><input type="radio" name="anrede" value="Frau" checked> Frau</label>
+          <label><input type="radio" name="anrede" value="Herr"> Herr</label>
+          <input type="text" id="anrufer_name" placeholder="Name, Vorname" style="width: 100%; margin-top: 2px;">
+        </div>
+        <div>
+          <span class="sub-label"><strong>TELEFON / ggf. E-Mail:</strong></span>
+          <input type="text" id="anrufer_kontakt" placeholder="Tel-Nr. / Mail" style="width: 100%; margin-top: 2px; font-weight: 700;">
+        </div>
+      </div>
+
+      <div style="margin-bottom: 4px;">
+        <span class="sub-label">PLZ / Ort / Klinik / Krankenhaus / ggf. Land:</span>
+        <input type="text" id="anrufer_ort" placeholder="PLZ, Stadt, Haus, Station" style="width: 100%;">
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 2px;">
+        <span class="sub-label" style="font-weight: 600; margin-right: 4px;">Abteilung:</span>
+        <label><input type="checkbox" id="abt_innere"> Innere</label>
+        <label><input type="checkbox" id="abt_psychiatrie"> Psychiatrie</label>
+        <label><input type="checkbox" id="abt_zna"> ZNA</label>
+        <label><input type="checkbox" id="abt_intensiv"> Intensiv</label>
+        <label><input type="checkbox" id="abt_paed"> Kinderklinik/Pädiatrie</label>
+        <label><input type="checkbox" id="abt_chir"> Chirurgie</label>
+        <label><input type="checkbox" id="abt_darzt"> D-Arzt</label>
+        <label>Sonstige: <input type="text" id="abt_sonstige" style="width: 90px;"></label>
+      </div>
+    </div>
+
+    <!-- QUELLEN SIDEBAR -->
+    <div class="sources-box">
+      <div class="sources-title">Quellen</div>
+      <div class="sources-list">
+        <label><input type="checkbox" id="q_bonntox" checked> BonnTox</label>
+        <label><input type="checkbox" id="q_muehlendahl"> Mühlendahl</label>
+        <label><input type="checkbox" id="q_poisindex"> Poisindex</label>
+        <label><input type="checkbox" id="q_toxinz"> Toxinz</label>
+        <label><input type="checkbox" id="q_gestis"> GESTIS</label>
+        <label><input type="checkbox" id="q_tdi"> TDI</label>
+        <label><input type="checkbox" id="q_sdb"> SDB</label>
+        <label><input type="checkbox" id="q_eva" checked> EVA</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATIENT ROW -->
+  <div class="form-section patient-box">
+    <div class="patient-row-1">
+      <div>
+        <div class="field-title">Patient Name, Vorname oder Tierart</div>
+        <input type="text" id="patient_name" placeholder="z. B. Mustermann, Leon" style="width: 100%; font-weight: 600;">
+      </div>
+      <div>
+        <div class="field-title">Fall-Nr.</div>
+        <input type="text" id="patient_fallnr" placeholder="z. B. 2026-9811" style="width: 100%;">
+      </div>
+      <div>
+        <div class="field-title">Geburtsdatum</div>
+        <input type="date" id="patient_geb" style="width: 100%;" onchange="autoCalculateAge()">
+      </div>
+    </div>
+
+    <div class="patient-row-2">
+      <div style="display: flex; align-items: center; gap: 4px;">
+        <span class="field-title">Alter:</span>
+        <input type="number" id="alter_wert" style="width: 45px; text-align: right;" min="0" step="1">
+        <label><input type="radio" name="alter_einheit" id="alt_j" value="Jahre" checked> Jahre</label>
+        <label><input type="radio" name="alter_einheit" id="alt_m" value="Monate"> Monate</label>
+        <label><input type="radio" name="alter_einheit" id="alt_t" value="Tage"> Tage</label>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 6px; border-left: 1px solid #cbd5e1; padding-left: 8px;">
+        <label><input type="radio" name="alter_kat" id="kat_neugeb"> Neugeb. (Tag 1-28)</label>
+        <label><input type="radio" name="alter_kat" id="kat_saeug"> Säugling (Tag 29-365)</label>
+        <label><input type="radio" name="alter_kat" id="kat_kleinkind"> Kleinkind (1 – &lt;4 J.)</label>
+        <label><input type="radio" name="alter_kat" id="kat_kind"> Kind (4 bis &lt;13 J.)</label>
+        <label><input type="radio" name="alter_kat" id="kat_jugend"> Jugendliche (13 - &lt;18 J.)</label>
+        <label><input type="radio" name="alter_kat" id="kat_erw"> Erwachsen (18+ J.)</label>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px; border-left: 1px solid #cbd5e1; padding-left: 8px;">
+        <label><input type="radio" name="geschlecht" id="geschl_m" value="m"> m</label>
+        <label><input type="radio" name="geschlecht" id="geschl_w" value="w" checked> w</label>
+        <label><input type="radio" name="geschlecht" id="geschl_div" value="div"> div</label>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px; border-left: 1px solid #cbd5e1; padding-left: 8px;">
+        <label><input type="checkbox" id="w_stillzeit"> w-Stillzeit</label>
+        <label><input type="checkbox" id="w_schwanger"> w-schwanger:</label>
+        <span>SSW:</span> <input type="number" id="ssw_wert" style="width: 38px;">
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 6px; border-left: 1px solid #cbd5e1; padding-left: 8px;">
+        <input type="number" id="gewicht_kg" style="width: 45px; text-align: right;" step="0.1"> <span class="field-title">kg</span>
+        <input type="number" id="groesse_cm" style="width: 45px; text-align: right;" step="1"> <span class="field-title">cm</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOXE ROW (4 COLS) -->
+  <div class="form-section noxe-grid">
+    <!-- Col 1: Zeitpunkt Erstkontakt -->
+    <div class="noxe-col">
+      <div class="field-title">Noxe Zeitpunkt Erstkontakt</div>
+      <div style="display: flex; gap: 4px; margin-top: 3px;">
+        <label><input type="radio" name="zeit_praefix" id="zp_vor" checked> vor</label>
+        <label><input type="radio" name="zeit_praefix" id="zp_um"> um</label>
+        <label><input type="radio" name="zeit_praefix" id="zp_ueber"> über</label>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+        <input type="text" id="zeit_wert" placeholder="Wert" style="width: 50px;">
+        <div style="display: flex; flex-direction: column; gap: 1px;">
+          <label><input type="radio" name="zeit_einheit" id="ze_min" checked> Min</label>
+          <label><input type="radio" name="zeit_einheit" id="ze_std"> Std</label>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1px;">
+          <label><input type="radio" name="zeit_einheit" id="ze_tage"> Tage</label>
+          <label><input type="radio" name="zeit_einheit" id="ze_monate"> Monate</label>
+        </div>
+        <label><input type="radio" name="zeit_einheit" id="ze_jahre"> Jahre</label>
+      </div>
+
+      <div style="margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
+        <div class="sub-label" style="margin-bottom: 2px; font-weight: 600;">Verlauf / Typus:</div>
+        <div class="flag-group">
+          <button type="button" class="flag-btn active" id="btn_typ_a" onclick="toggleBtn(this)" title="Akut">A</button>
+          <button type="button" class="flag-btn" id="btn_typ_s" onclick="toggleBtn(this)" title="Subakut">S</button>
+          <button type="button" class="flag-btn" id="btn_typ_c" onclick="toggleBtn(this)" title="Chronisch">C</button>
+          <button type="button" class="flag-btn" id="btn_typ_b" onclick="toggleBtn(this)" title="Biphasisch / Akut auf chronisch">B</button>
+          <button type="button" class="flag-btn" id="btn_typ_u" onclick="toggleBtn(this)" title="Unbekannt">U</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Col 2: Ätiologie -->
+    <div class="noxe-col">
+      <div class="field-title">Ätiologie</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px;">
+        <label><input type="checkbox" id="aet_suizidal"> suizidal</label>
+        <label><input type="checkbox" id="aet_gewerblich"> gewerblich</label>
+        <label><input type="checkbox" id="aet_akzidentiell" checked> akzidentiell</label>
+        <label><input type="checkbox" id="aet_nebenwirkung"> Nebenwirkung</label>
+        <label><input type="checkbox" id="aet_unbekannt"> unbekannt</label>
+        <label><input type="checkbox" id="aet_umwelt"> Umwelt</label>
+        <label><input type="checkbox" id="aet_abusus"> Abusus</label>
+        <label><input type="checkbox" id="aet_psychose"> Psychose</label>
+        <label style="grid-column: span 2;"><input type="checkbox" id="aet_giftbeibringung"> Giftbeibringung</label>
+      </div>
+      <div style="margin-top: 3px;">
+        <label style="display: block; font-size: 9px;"><input type="checkbox" id="aet_caregiver"> Ausführungsfehler / Fehlgabe durch nichtärztl. caregiver</label>
+        <label style="display: block; font-size: 9px; margin-top: 2px;"><input type="checkbox" id="aet_iatrogen"> iatrogen durch Arzt/Ärztin selbst falsch angeordnet u./o. appliziert</label>
+      </div>
+      <div style="margin-top: 3px;">
+        <span class="sub-label">Bemerkung:</span>
+        <input type="text" id="aet_bemerkung" style="width: 100%;">
+      </div>
+    </div>
+
+    <!-- Col 3: Ort -->
+    <div class="noxe-col">
+      <div class="field-title">Ort</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px;">
+        <label><input type="checkbox" id="ort_haus" checked> Haus</label>
+        <label><input type="checkbox" id="ort_kiga"> KiGa-KiTa</label>
+        <label><input type="checkbox" id="ort_freien"> im Freien</label>
+        <label><input type="checkbox" id="ort_schule"> Schule</label>
+        <label><input type="checkbox" id="ort_spielplatz"> Spielplatz</label>
+        <label><input type="checkbox" id="ort_kh"> Krankenhaus</label>
+        <label><input type="checkbox" id="ort_unbekannt"> unbekannt</label>
+        <label><input type="checkbox" id="ort_behindheim"> Behind.heim</label>
+        <label><input type="checkbox" id="ort_garten"> Garten</label>
+        <label><input type="checkbox" id="ort_altenheim"> Altenheim</label>
+      </div>
+      <div style="margin-top: 5px;">
+        <span class="sub-label">Bemerkung:</span>
+        <input type="text" id="ort_bemerkung" style="width: 100%;">
+      </div>
+    </div>
+
+    <!-- Col 4: Expositionsroute -->
+    <div class="noxe-col">
+      <div class="field-title">Expositionsroute</div>
+      <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 2px;">
+        <div>
+          <label><input type="checkbox" id="route_oral" checked> oral</label><br>
+          <label><input type="checkbox" id="route_nasal"> nasal</label><br>
+          <label><input type="checkbox" id="route_inhalativ"> inhalativ</label><br>
+          <label><input type="checkbox" id="route_auge"> Auge</label><br>
+          <label><input type="checkbox" id="route_haut"> Haut</label><br>
+          <label><input type="checkbox" id="route_unbekannt"> unbekannt</label>
+        </div>
+        <div>
+          <label><input type="checkbox" id="route_stich"> Stich</label><br>
+          <label><input type="checkbox" id="route_biss"> Biss</label><br>
+          <label><input type="checkbox" id="route_rektal"> rektal</label><br>
+          <label><input type="checkbox" id="route_iv"> i.v.</label><br>
+          <label><input type="checkbox" id="route_im"> i.m.</label><br>
+          <label><input type="checkbox" id="route_sc"> s.c.</label><br>
+          <label><input type="checkbox" id="route_para"> para</label><br>
+          <label><input type="checkbox" id="route_weichteile"> Weichteile</label>
+        </div>
+      </div>
+      <div style="margin-top: 3px;">
+        <span class="sub-label">Bemerkung:</span>
+        <input type="text" id="route_bemerkung" style="width: 100%;">
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBSTANZTANBELLE (7 ROWS) -->
+  <div class="form-section">
+    <table class="substance-table" id="substanceTable">
+      <thead>
+        <tr>
+          <th style="width: 140px;">Exposition <span style="font-weight: normal; font-size: 8.5px;">(G:gesichert, N:nicht, K:keine)</span></th>
+          <th>Noxe <span style="font-weight: normal; font-size: 8.5px;">(G:giftig, N:nicht giftig, K:kontaminiert, T:toxisch)</span></th>
+          <th style="width: 250px;">Menge <span style="font-weight: normal; font-size: 8.5px;">(G:gesichert, N:nicht, U:unbekannt, max:maximal)</span></th>
+        </tr>
+      </thead>
+      <tbody id="substanceTbody">
+        <!-- 7 Rows generated by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ANAMNESE -->
+  <div class="form-section anamnese-box">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+      <span class="field-title">Anamnese (aktuelles Ereignis, ggf. Vorgeschichte)</span>
+      <label><input type="checkbox" id="anamnese_beiblatt"> Beiblatt</label>
+    </div>
+    <textarea id="anamnese_text" rows="2" style="width: 100%; resize: vertical;" placeholder="Notfallhergang, Auffindesituation, Schilderung des Anrufers..."></textarea>
+
+    <div class="anamnese-grid">
+      <div>
+        <div style="display: flex; justify-content: space-between;">
+          <span class="field-title">VE <span class="sub-label">(Vorerkrankungen / Vorereignisse)</span></span>
+          <label><input type="checkbox" id="ve_beiblatt"> Rückseite / Beiblatt</label>
+        </div>
+        <input type="text" id="ve_text" placeholder="z. B. Asthma, KHK, Epilepsie..." style="width: 100%;">
+      </div>
+      <div>
+        <div style="display: flex; justify-content: space-between;">
+          <span class="field-title">VM <span class="sub-label">(Vormedikation / Dauermedikation)</span></span>
+          <label><input type="checkbox" id="vm_beiblatt"> Rückseite / Beiblatt</label>
+        </div>
+        <input type="text" id="vm_text" placeholder="z. B. Betablocker, Antiepileptika, Schilddrüsenhormone..." style="width: 100%;">
+      </div>
+    </div>
+  </div>
+
+  <!-- SYMPTOME / BEFUNDE & THERAPIEN / MASSNAHMEN -->
+  <div class="form-section clinical-section">
+    <!-- Left: Symptome & Befunde -->
+    <div class="vitals-box">
+      <div class="field-title">Symptome</div>
+      <div style="display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px;">
+        <label><input type="checkbox" id="symp_keine" checked onchange="toggleSympKeine()"> keine</label>
+        <label><input type="checkbox" id="symp_wach" checked> wach und voll orientiert</label>
+        <label><input type="checkbox" id="symp_fraglich"> Zusammenhang fraglich</label>
+      </div>
+
+      <div class="field-title" style="border-top: 1px solid #cbd5e1; padding-top: 4px;">Befunde / Massnahmen vor / bei Anruf</div>
+      <div class="vitals-grid">
+        <div class="vital-item"><label>GCS</label><input type="number" id="vital_gcs" placeholder="15" min="3" max="15"></div>
+        <div class="vital-item"><label>SpO2</label><input type="number" id="vital_spo2" placeholder="98 %" min="0" max="100"></div>
+        <div class="vital-item"><label>HF</label><input type="number" id="vital_hf" placeholder="/min" min="0"></div>
+        <div class="vital-item"><label>RR</label><input type="text" id="vital_rr" placeholder="120/80" style="text-align: center;"></div>
+        <div class="vital-item"><label>QTc</label><input type="number" id="vital_qtc" placeholder="ms"></div>
+        <div class="vital-item"><label>pH</label><input type="text" id="vital_ph" placeholder="7.40"></div>
+        <div class="vital-item"><label>Temp</label><input type="number" id="vital_temp" placeholder="°C" step="0.1"></div>
+        <div class="vital-item"><label>BZ</label><input type="number" id="vital_bz" placeholder="mg/dl"></div>
+      </div>
+      <div style="margin-top: 6px; background: #fff; border: 1px solid #e2e8f0; padding: 3px 6px;">
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <span style="font-weight: 600;">Ethanol:</span>
+          <input type="number" id="vital_ethanol" style="width: 55px; text-align: right;" step="0.01">
+          <label><input type="radio" name="ethanol_einheit" id="eth_mgl" value="mg/L"> mg/L</label>
+          <label><input type="radio" name="ethanol_einheit" id="eth_promille" value="promille" checked> ‰</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Therapien und Massnahmen -->
+    <div class="therapy-box">
+      <div class="therapy-header">
+        <div>
+          <span class="field-title">Therapien und Massnahmen</span>
+          <div class="sub-label">Spalten: <strong>v</strong> = vor Anruf &bull; <strong>e</strong> = empfohlen &bull; <strong>g</strong> = gegeben</div>
+        </div>
+        <div class="eva-note-box">
+          <strong>in EVA-1.0 Feld „Zusatz“ beachten</strong><br>
+          caregiver: <label><input type="checkbox" id="add_care_fam"> Familie</label> <label><input type="checkbox" id="add_care_betr"> Betreuungseinrichtung</label><br>
+          KH/Klinik: <label><input type="checkbox" id="add_kh_som"> somatisch</label> <label><input type="checkbox" id="add_kh_psych"> Psychiatrie</label><br>
+          Monitoring: <label><input type="checkbox" id="add_mon_allg"> Klinik allg.</label> <label><input type="checkbox" id="add_mon_zna"> Notaufn.</label> <label><input type="checkbox" id="add_mon_its"> Intensiv</label> <label><input type="checkbox" id="add_mon_imc"> IMC</label>
+        </div>
+      </div>
+
+      <div class="therapy-columns-container">
+        <!-- Main Therapies -->
+        <div>
+          <table class="therapy-table">
+            <thead>
+              <tr>
+                <th style="width: 20px;">v</th>
+                <th>Maßnahme / Intervention</th>
+                <th style="width: 20px;">e</th>
+                <th style="width: 20px;">g</th>
+              </tr>
+            </thead>
+            <tbody id="therapiesTbody">
+              <!-- Built via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Specific Meds Matrix (Right) -->
+        <div>
+          <div class="field-title" style="text-align: center; margin-bottom: 2px;">Spezifische Medikation</div>
+          <table class="med-matrix-table">
+            <thead>
+              <tr>
+                <th>Substanz</th>
+                <th style="width: 20px;">e</th>
+                <th style="width: 20px;">g</th>
+              </tr>
+            </thead>
+            <tbody id="medMatrixTbody">
+              <!-- Built via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW: PSS & PROZEDERE -->
+  <div class="form-section bottom-risk-section">
+    <!-- PSS vor/bei Anruf -->
+    <div class="risk-cell">
+      <div class="field-title">PSS vor/bei Anruf</div>
+      <div class="sub-label">Aktueller Schweregrad der Vergiftung</div>
+      <div class="pss-scale" id="pssVorContainer">
+        <div class="pss-btn active-0" onclick="setPssVor('0')">⓪</div>
+        <div class="pss-btn" onclick="setPssVor('1')">①</div>
+        <div class="pss-btn" onclick="setPssVor('2')">②</div>
+        <div class="pss-btn" onclick="setPssVor('3')">③</div>
+        <div class="pss-btn" onclick="setPssVor('4')">④</div>
+        <div class="pss-btn" onclick="setPssVor('U')">U</div>
+      </div>
+      <div id="pssVorLabel" style="font-weight: 700; margin-top: 4px; font-size: 10px; color: #27ae60;">Grad 0: Keine Symptome</div>
+    </div>
+
+    <!-- Max PSS potentiell -->
+    <div class="risk-cell">
+      <div class="field-title">max. PSS potentiell</div>
+      <div class="sub-label">Erwartetes / maximales Gefährdungspotenzial</div>
+      <div class="pss-scale" id="pssPotContainer">
+        <div class="pss-btn" onclick="setPssPot('0')">⓪</div>
+        <div class="pss-btn active-1" onclick="setPssPot('1')">①</div>
+        <div class="pss-btn" onclick="setPssPot('2')">②</div>
+        <div class="pss-btn" onclick="setPssPot('3')">③</div>
+        <div class="pss-btn" onclick="setPssPot('4')">④</div>
+        <div class="pss-btn" onclick="setPssPot('U')">U</div>
+      </div>
+      <div id="pssPotLabel" style="font-weight: 700; margin-top: 4px; font-size: 10px; color: #e67e22;">Grad 1: Leicht toxisch</div>
+    </div>
+
+    <!-- Prozedere -->
+    <div class="risk-cell">
+      <div class="field-title">wegen Noxe empfohlenes Prozedere</div>
+      <div class="prozedere-pills">
+        <label class="proz-pill"><input type="checkbox" id="proz_keines"> keines</label>
+        <label class="proz-pill selected"><input type="checkbox" id="proz_laie" checked> Laie (Zuhause)</label>
+        <label class="proz-pill"><input type="checkbox" id="proz_ambulant"> ambulant</label>
+        <label class="proz-pill"><input type="checkbox" id="proz_stationaer"> stationär</label>
+        <label class="proz-pill"><input type="checkbox" id="proz_its"> Intensiv / IMC</label>
+        <label class="proz-pill"><input type="checkbox" id="proz_unklar"> nicht zu entsch.</label>
+        <label class="proz-pill"><input type="checkbox" id="proz_beiblatt"> Beiblatt</label>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Dynamic Substance Table (7 Rows)
+  const substanceTbody = document.getElementById('substanceTbody');
+  for (let i = 1; i <= 7; i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div class="flag-group">
+          <button type="button" class="flag-btn ${i===1?'active':''}" onclick="setExpoFlag(${i}, 'G')" id="exp_${i}_G">G</button>
+          <button type="button" class="flag-btn" onclick="setExpoFlag(${i}, 'N')" id="exp_${i}_N">N</button>
+          <button type="button" class="flag-btn" onclick="setExpoFlag(${i}, 'K')" id="exp_${i}_K">K</button>
+        </div>
+      </td>
+      <td>
+        <div style="display: flex; gap: 4px; align-items: center;">
+          <input type="text" id="noxe_name_${i}" placeholder="${i===1?'z. B. Finish Geschirrspültab':'Noxe / Substanz / Handelsname'}" style="flex: 1;">
+          <div class="flag-group">
+            <button type="button" class="flag-btn ${i===1?'active':''}" onclick="toggleFlagBtn(this)" id="noxe_flag_${i}_G" title="Giftig">G</button>
+            <button type="button" class="flag-btn" onclick="toggleFlagBtn(this)" id="noxe_flag_${i}_N" title="Nicht giftig">N</button>
+            <button type="button" class="flag-btn" onclick="toggleFlagBtn(this)" id="noxe_flag_${i}_K" title="Kontaminiert">K</button>
+            <button type="button" class="flag-btn" onclick="toggleFlagBtn(this)" id="noxe_flag_${i}_T" title="Toxisch">T</button>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div style="display: flex; gap: 4px; align-items: center;">
+          <input type="text" id="menge_val_${i}" placeholder="${i===1?'1/2 Spültab abgebissen':'Menge / Dosis'}" style="flex: 1;">
+          <div class="flag-group">
+            <button type="button" class="flag-btn ${i===1?'active':''}" onclick="toggleFlagBtn(this)" id="menge_flag_${i}_G" title="Gesichert">G</button>
+            <button type="button" class="flag-btn" onclick="toggleFlagBtn(this)" id="menge_flag_${i}_N" title="Nicht gesichert">N</button>
+            <button type="button" class="flag-btn" onclick="toggleFlagBtn(this)" id="menge_flag_${i}_U" title="Unbekannt">U</button>
+            <button type="button" class="flag-btn ${i===1?'active':''}" onclick="toggleFlagBtn(this)" id="menge_flag_${i}_max" title="Maximal">max</button>
+          </div>
+        </div>
+      </td>
+    `;
+    substanceTbody.appendChild(tr);
+  }
+
+  function setExpoFlag(row, flag) {
+    ['G', 'N', 'K'].forEach(f => {
+      const el = document.getElementById(`exp_${row}_${f}`);
+      if (el) el.classList.toggle('active', f === flag);
+    });
+  }
+
+  function toggleFlagBtn(btn) {
+    btn.classList.toggle('active');
+  }
+
+  function toggleBtn(btn) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.flag-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // Therapies List
+  const therapies = [
+    { id: 'keine', label: 'Keine' },
+    { id: 'symptominfo', label: 'Symptominfo telefonisch', extra: '<label><input type="checkbox" id="th_fax"> FAX</label>' },
+    { id: 'ueberwach', label: 'Überwachung' },
+    { id: 'spuelen', label: 'Spülen' },
+    { id: 'fluessigkeit', label: 'Flüssigkeit oral', extra: '<label><input type="checkbox" id="th_khreich"> kohlenhydratreich</label>' },
+    { id: 'entschaeumen', label: 'Entschäumen', extra: '<label><input type="checkbox" id="th_butter"> Butter</label> <label><input type="checkbox" id="th_simeticon"> Simeticon</label>' },
+    { id: 'wg_noxe_arzt', label: 'wg. Noxe Ärztl. Untersuchung' },
+    { id: 'wg_symp_arzt', label: 'wg. Symptom Ärztl. Untersuchung' },
+    { id: 'symptomatisch', label: 'Symptomat. Therapie/Massnahmen' },
+    { id: 'kohle', label: 'Aktivkohle', extra: '<label><input type="checkbox" id="th_kohle_rep"> repetitiv</label> <label><input type="checkbox" id="th_kohle_prol"> prolongiert</label>' },
+    { id: 'labor', label: 'Labor' },
+    { id: 'blutspiegel', label: 'Blutspiegel', extra: '<label><input type="checkbox" id="th_spiegel_eth"> Ethanol</label> <label><input type="checkbox" id="th_spiegel_noxe"> Noxe</label>' },
+    { id: 'antidot', label: 'Antidot', extra: '<label><input type="checkbox" id="th_flumazenil"> Flumazenil</label> <label><input type="checkbox" id="th_naloxon"> Naloxon</label> <label><input type="checkbox" id="th_acc"> ACC</label> <label><input type="checkbox" id="th_acc_prol"> ACC prolongiert</label>' },
+    { id: 'volumen', label: 'Volumentherapie i.v.' },
+    { id: 'veraetzung', label: 'Verätzungsschema' },
+    { id: 'cortison', label: 'Cortison', extra: '<label><input type="checkbox" id="th_cort_iv"> i.v.</label> <label><input type="checkbox" id="th_cort_inh"> inhal.</label> <label><input type="checkbox" id="th_cort_lok"> lokal</label>' },
+    { id: 'magenspuel', label: 'Magenspül.', extra: '<label><input type="checkbox" id="th_spuel_endo"> Endo</label> <label><input type="checkbox" id="th_spuel_intub"> Intub.schutz</label>' },
+    { id: 'intubation', label: 'Intubation / Beatmung' },
+    { id: 'giftelim', label: 'sek. Giftelim.', extra: '<label><input type="checkbox" id="th_elim_hd"> HD</label> <label><input type="checkbox" id="th_elim_lipid"> lipid rescue</label>' },
+    { id: 'produktinfo', label: 'Produktinformation', extra: '<label><input type="checkbox" id="th_prod_sdb"> SDB</label>' },
+    { id: 'bestimmung', label: 'Bestimmung Noxe und Wiederanruf' },
+    { id: 'pilz', label: 'Pilzsachverständige PSV' },
+    { id: 'rueckruf_giz', label: 'Rückruf durch GIZ' },
+    { id: 'kontakt_empf', label: 'GIZ empfiehlt Kontaktaufn. durch:', extraInput: true }
+  ];
+
+  const therapiesTbody = document.getElementById('therapiesTbody');
+  therapies.forEach(t => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="col-flag"><input type="checkbox" id="th_${t.id}_v"></td>
+      <td>
+        <label for="th_${t.id}_e" style="font-weight: 600;">${t.label}</label>
+        ${t.extra ? '<span style="margin-left: 6px; font-weight: normal;">' + t.extra + '</span>' : ''}
+        ${t.extraInput ? '<input type="text" id="th_' + t.id + '_txt" style="width: 140px; margin-left: 4px;">' : ''}
+      </td>
+      <td class="col-flag"><input type="checkbox" id="th_${t.id}_e"></td>
+      <td class="col-flag"><input type="checkbox" id="th_${t.id}_g"></td>
+    `;
+    therapiesTbody.appendChild(tr);
+  });
+
+  // Specific Med Matrix
+  const meds = [
+    'Benzodiaz', 'NaBi', 'Mg++', 'Katecholamin', 'Biperiden', "E'lyt-Subst.",
+    'Glukose', 'ß-Blocker', 'Vitamin B1', 'Lidocain', 'Temp.Kontr.', 'kühlen', 'Physostig'
+  ];
+  const medMatrixTbody = document.getElementById('medMatrixTbody');
+  meds.forEach(m => {
+    const slug = m.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${m}</strong></td>
+      <td style="text-align: center;"><input type="checkbox" id="med_${slug}_e"></td>
+      <td style="text-align: center;"><input type="checkbox" id="med_${slug}_g"></td>
+    `;
+    medMatrixTbody.appendChild(tr);
+  });
+
+  // PSS Helpers
+  let currentPssVor = '0';
+  let currentPssPot = '1';
+  const pssLabels = {
+    '0': 'Grad 0: Keine Symptome',
+    '1': 'Grad 1: Leichte Symptome',
+    '2': 'Grad 2: Mittelschwere Symptome',
+    '3': 'Grad 3: Schwere Symptome (Lebensgefahr)',
+    '4': 'Grad 4: Letaler Verlauf',
+    'U': 'Grad U: Nicht beurteilbar / Unbekannt'
+  };
+
+  function setPssVor(val) {
+    currentPssVor = val;
+    const btns = document.querySelectorAll('#pssVorContainer .pss-btn');
+    const keys = ['0','1','2','3','4','U'];
+    btns.forEach((b, idx) => {
+      b.className = 'pss-btn';
+      if (keys[idx] === val) {
+        b.classList.add('active-' + val.toLowerCase());
+      }
+    });
+    document.getElementById('pssVorLabel').textContent = pssLabels[val];
+  }
+
+  function setPssPot(val) {
+    currentPssPot = val;
+    const btns = document.querySelectorAll('#pssPotContainer .pss-btn');
+    const keys = ['0','1','2','3','4','U'];
+    btns.forEach((b, idx) => {
+      b.className = 'pss-btn';
+      if (keys[idx] === val) {
+        b.classList.add('active-' + val.toLowerCase());
+      }
+    });
+    document.getElementById('pssPotLabel').textContent = pssLabels[val];
+  }
+
+  // Toast notifier
+  function showToast(msg) {
+    const t = document.getElementById('statusToast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 2400);
+  }
+
+  function setNowTime() {
+    const now = new Date();
+    document.getElementById('uhrzeit').value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    showToast('Uhrzeit auf aktuellen Zeitstempel gesetzt.');
+  }
+
+  function toggleSympKeine() {
+    const noSymptoms = document.getElementById('symp_keine').checked;
+    if (noSymptoms) {
+      document.getElementById('symp_wach').checked = true;
+    }
+  }
+
+  function autoCalculateAge() {
+    const dob = document.getElementById('patient_geb').value;
+    if (!dob) return;
+    const d = new Date(dob);
+    const now = new Date();
+    const diffYears = now.getFullYear() - d.getFullYear();
+    if (diffYears >= 0) {
+      document.getElementById('alter_wert').value = diffYears;
+      document.getElementById('alt_j').checked = true;
+      if (diffYears < 1) document.getElementById('kat_saeug').checked = true;
+      else if (diffYears < 4) document.getElementById('kat_kleinkind').checked = true;
+      else if (diffYears < 13) document.getElementById('kat_kind').checked = true;
+      else if (diffYears < 18) document.getElementById('kat_jugend').checked = true;
+      else document.getElementById('kat_erw').checked = true;
+    }
+  }
+
+  // Sample Data Loader
+  function loadSampleData() {
+    document.getElementById('berater').value = 'Petra Förster (Nr. 14)';
+    document.getElementById('uhrzeit').value = '13:28';
+    document.getElementById('anruf_anfrage').checked = true;
+    document.getElementById('az').value = 'BN-2026-10492';
+    
+    // Caller
+    document.querySelector('input[name="anrufer_typ"][value="Laie"]').checked = true;
+    document.querySelector('input[name="anrede"][value="Frau"]').checked = true;
+    document.getElementById('anrufer_name').value = 'Schneider, Melanie (Mutter)';
+    document.getElementById('anrufer_kontakt').value = '0171-8849201';
+    document.getElementById('anrufer_ort').value = '53115 Bonn, Reuterstr. 44';
+
+    // Patient
+    document.getElementById('patient_name').value = 'Schneider, Jonas';
+    document.getElementById('patient_fallnr').value = '2026-0819';
+    document.getElementById('patient_geb').value = '2024-04-12';
+    document.getElementById('alter_wert').value = '2';
+    document.getElementById('alt_j').checked = true;
+    document.getElementById('kat_kleinkind').checked = true;
+    document.getElementById('geschl_m').checked = true;
+    document.getElementById('gewicht_kg').value = '13.5';
+    document.getElementById('groesse_cm').value = '88';
+
+    // Noxe
+    document.getElementById('zp_vor').checked = true;
+    document.getElementById('zeit_wert').value = '20';
+    document.getElementById('ze_min').checked = true;
+    document.getElementById('btn_typ_a').click();
+    document.getElementById('aet_akzidentiell').checked = true;
+    document.getElementById('ort_haus').checked = true;
+    document.getElementById('route_oral').checked = true;
+
+    // Substanztabelle
+    document.getElementById('noxe_name_1').value = 'Somat All-in-1 Spülmaschinentab';
+    document.getElementById('menge_val_1').value = 'ca. 1/3 Tab abgebissen & ausgespuckt';
+    setExpoFlag(1, 'G');
+    document.getElementById('noxe_flag_1_G').classList.add('active');
+    document.getElementById('menge_flag_1_max').classList.add('active');
+
+    // Anamnese
+    document.getElementById('anamnese_text').value = 'Mutter räumte Geschirrspüler ein. Kind nahm Tab aus Verpackung, biss hinein, weinte sofort. Mund wurde von Mutter sofort mit Wasser ausgespült. Kein Erbrechen, speichelt leicht.';
+    document.getElementById('ve_text').value = 'Keine relevanten Vorerkrankungen.';
+    document.getElementById('vm_text').value = 'Keine Dauermedikation.';
+
+    // Vitals
+    document.getElementById('symp_keine').checked = false;
+    document.getElementById('symp_wach').checked = true;
+    document.getElementById('vital_gcs').value = '15';
+    document.getElementById('vital_spo2').value = '99';
+    document.getElementById('vital_hf').value = '110';
+    document.getElementById('vital_rr').value = '95/60';
+
+    // Therapien
+    document.getElementById('th_spuelen_v').checked = true;
+    document.getElementById('th_spuelen_e').checked = true;
+    document.getElementById('th_fluessigkeit_e').checked = true;
+    document.getElementById('th_entschaeumen_e').checked = true;
+    document.getElementById('th_simeticon').checked = true;
+    document.getElementById('th_ueberwach_e').checked = true;
+
+    // PSS
+    setPssVor('1');
+    setPssPot('1');
+    document.getElementById('proz_laie').checked = true;
+    
+    showToast('Klinischer Beispielfall (Spültab-Ingestion Kleinkind) erfolgreich geladen!');
+  }
+
+  function clearForm() {
+    if (confirm('Möchten Sie das Formular wirklich vollständig leeren?')) {
+      document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(el => el.value = '');
+      document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+      document.querySelectorAll('.flag-btn').forEach(el => el.classList.remove('active'));
+      setPssVor('0');
+      setPssPot('0');
+      showToast('Formular zurückgesetzt.');
+    }
+  }
+
+  function saveRecord() {
+    showToast('Protokoll erfolgreich validiert und archiviert (AZ: ' + (document.getElementById('az').value || 'BN-DRAFT') + ')');
+  }
+
+  // Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.altKey && e.key.toLowerCase() === 'l') {
+      e.preventDefault();
+      loadSampleData();
+    } else if (e.altKey && e.key.toLowerCase() === 'r') {
+      e.preventDefault();
+      clearForm();
+    } else if (e.ctrlKey && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      saveRecord();
+    }
+  });
+</script>
+</body>
+</html>

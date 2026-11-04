@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { EvaRecord, TherapyItem, EmergencyMedItem } from '../../types/eva';
-import { SectionHeader } from '../SectionHeader';
 import { Stethoscope, Pill, Shield, CheckSquare, Layers } from 'lucide-react';
 
 interface Props {
@@ -44,18 +43,8 @@ export const TherapiesSection: React.FC<Props> = ({ record, onChange }) => {
     }
   };
 
-  const isComplete = Object.values(record.therapien).some((t) => t.v || t.e || t.g);
-
   return (
-    <div id="sec-therapien" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
-      <SectionHeader
-        number={7}
-        title="Therapien, Maßnahmen & Antidote"
-        subtitle="3-Spalten-Interventionsmatrix (v: Vorher erfolgt | e: Empfohlen durch GIZ | g: Vor Ort gegeben) und Notfallmedikamente"
-        badge="Sektion 9"
-        isComplete={isComplete}
-      />
-
+    <div>
       {/* Kontext-Zusatz: Caregiver, KH-Typ, Monitoring */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 rounded-xl bg-slate-50/80 border border-slate-200/80 text-xs">
         <div>

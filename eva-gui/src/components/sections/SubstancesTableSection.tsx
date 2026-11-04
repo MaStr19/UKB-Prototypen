@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { EvaRecord, SubstanceRow } from '../../types/eva';
-import { SectionHeader } from '../SectionHeader';
 import { FlaskConical, Trash2, Info } from 'lucide-react';
 
 interface Props {
@@ -27,18 +26,8 @@ export const SubstancesTableSection: React.FC<Props> = ({ record, onChange }) =>
     });
   };
 
-  const isComplete = record.substanzen.some((s) => s.noxeName.trim().length > 0);
-
   return (
-    <div id="sec-substanzen" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
-      <SectionHeader
-        number={4}
-        title="Substanztabelle (7 Agenzien-Matrix)"
-        subtitle="Erfassung aller toxischen Agentien mit Expositionssicherheit (G/N/K), Toxizität (G/N/K/T) und Mengeneinstufung (G/N/U/max)"
-        badge="Sektion 6"
-        isComplete={isComplete}
-      />
-
+    <div>
       {/* Table Legend */}
       <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-slate-700">
@@ -112,7 +101,7 @@ export const SubstancesTableSection: React.FC<Props> = ({ record, onChange }) =>
                             key={f.flag}
                             type="button"
                             title={f.title}
-                            onClick={() => updateRow(idx, { expoFlag: isSelected ? '' : (f.flag as any) })}
+                            onClick={() => updateRow(idx, { expoFlag: isSelected ? '' : (f.flag as EvaRecord['substanzen'][number]['expoFlag']) })}
                             className={`w-8 py-1 rounded text-xs font-bold transition-all ${
                               isSelected
                                 ? f.flag === 'G'
@@ -153,7 +142,7 @@ export const SubstancesTableSection: React.FC<Props> = ({ record, onChange }) =>
                               key={f.flag}
                               type="button"
                               title={f.title}
-                              onClick={() => updateRow(idx, { noxeFlag: isSelected ? '' : (f.flag as any) })}
+                              onClick={() => updateRow(idx, { noxeFlag: isSelected ? '' : (f.flag as EvaRecord['substanzen'][number]['noxeFlag']) })}
                               className={`w-6 py-1 text-[11px] font-bold rounded ${
                                 isSelected ? f.color : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                               }`}
@@ -189,7 +178,7 @@ export const SubstancesTableSection: React.FC<Props> = ({ record, onChange }) =>
                               key={f.flag}
                               type="button"
                               title={f.title}
-                              onClick={() => updateRow(idx, { mengeFlag: isSelected ? '' : (f.flag as any) })}
+                              onClick={() => updateRow(idx, { mengeFlag: isSelected ? '' : (f.flag as EvaRecord['substanzen'][number]['mengeFlag']) })}
                               className={`px-1.5 py-1 text-[10px] font-bold rounded ${
                                 isSelected ? f.color : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                               }`}

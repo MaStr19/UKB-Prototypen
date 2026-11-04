@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { EvaRecord, CallerType, DepartmentType } from '../../types/eva';
-import { SectionHeader } from '../SectionHeader';
 import { Phone, Building, UserCheck, ShieldCheck } from 'lucide-react';
 
 interface Props {
@@ -52,18 +51,8 @@ export const MetadataAndCallerSection: React.FC<Props> = ({ record, onChange }) 
     });
   };
 
-  const isComplete = !!(record.anruferKontakt && record.anruferName && record.anruferTyp);
-
   return (
-    <div id="sec-metadata" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
-      <SectionHeader
-        number={1}
-        title="Kopfbereich, Anrufer & Quellen"
-        subtitle="Stammdaten des Notrufs, Identifikation des Anrufers und konsultierte Tox-Datenbanken"
-        badge="Sektion 1 - 3"
-        isComplete={isComplete}
-      />
-
+    <div>
       {/* Row 1: Header Meta (Berater, Datum, Uhrzeit, Anruftyp, Flags, AZ) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 pb-5 border-b border-slate-100 mb-6 text-xs">
         {/* Berater */}

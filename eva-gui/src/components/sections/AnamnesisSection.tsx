@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { EvaRecord } from '../../types/eva';
-import { SectionHeader } from '../SectionHeader';
 import { FileText, PlusCircle, Paperclip } from 'lucide-react';
 
 interface Props {
@@ -27,18 +26,8 @@ export const AnamnesisSection: React.FC<Props> = ({ record, onChange }) => {
     onChange('anamneseText', updated);
   };
 
-  const isComplete = record.anamneseText.trim().length > 5;
-
   return (
-    <div id="sec-anamnese" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
-      <SectionHeader
-        number={5}
-        title="Anamnese, Vorerkrankungen & Vormedikation"
-        subtitle="Detaillierte Schilderung des Notfallhergangs, Auffindesituation, Zeugenaussagen und chronische Medikation"
-        badge="Sektion 7"
-        isComplete={isComplete}
-      />
-
+    <div>
       {/* Row 1: Quick Snippets */}
       <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs">
         <span className="text-slate-400 font-semibold text-[11px] flex items-center gap-1 mr-1">

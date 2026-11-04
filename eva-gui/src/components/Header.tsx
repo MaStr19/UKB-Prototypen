@@ -3,17 +3,17 @@
 import React from 'react';
 import { EvaRecord } from '../types/eva';
 import { 
-  PhoneCall, 
   User, 
   AlertTriangle, 
-  Flame, 
   Trash2, 
   Printer, 
   Download, 
   Copy, 
   Check, 
   Sparkles,
-  HeartPulse
+  HeartPulse,
+  ChevronsDown,
+  ChevronsUp
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -22,6 +22,8 @@ interface HeaderProps {
   onClear: () => void;
   onExportJson: () => void;
   onCopySummary: () => void;
+  onExpandAll?: () => void;
+  onCollapseComplete?: () => void;
   activeSection: string;
 }
 
@@ -31,6 +33,8 @@ export const Header: React.FC<HeaderProps> = ({
   onClear,
   onExportJson,
   onCopySummary,
+  onExpandAll,
+  onCollapseComplete,
   activeSection,
 }) => {
   const [copied, setCopied] = React.useState(false);
@@ -42,15 +46,38 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const navItems = [
-    { id: 'sec-metadata', label: '1. Kopf & Anrufer', shortcut: 'Alt+1' },
-    { id: 'sec-patient', label: '2. Patient', shortcut: 'Alt+2' },
-    { id: 'sec-noxe', label: '3. Exposition & Noxe', shortcut: 'Alt+3' },
-    { id: 'sec-substanzen', label: '4. Substanzen (7)', shortcut: 'Alt+4' },
-    { id: 'sec-anamnese', label: '5. Anamnese & VE/VM', shortcut: 'Alt+5' },
-    { id: 'sec-vitals', label: '6. Symptome & Vitals', shortcut: 'Alt+6' },
-    { id: 'sec-therapien', label: '7. Therapien & Antidote', shortcut: 'Alt+7' },
-    { id: 'sec-pss', label: '8. PSS & Prozedere', shortcut: 'Alt+8' },
+    { id: 'sec-metadata', num: '1', label: 'Kopf & Anrufer', shortcut: 'Alt+1' },
+    { id: 'sec-patient', num: '2', label: 'Patient', shortcut: 'Alt+2' },
+    { id: 'sec-noxe', num: '3', label: 'Exposition & Noxe', shortcut: 'Alt+3' },
+    { id: 'sec-substanzen', num: '4', label: 'Substanzen (7)', shortcut: 'Alt+4' },
+    { id: 'sec-anamnese', num: '5', label: 'Anamnese & VE/VM', shortcut: 'Alt+5' },
+    { id: 'sec-vitals', num: '6', label: 'Symptome & Vitals', shortcut: 'Alt+6' },
+    { id: 'sec-therapien', num: '7', label: 'Therapien & Antidote', shortcut: 'Alt+7' },
+    { id: 'sec-pss', num: '8', label: 'PSS & Prozedere', shortcut: 'Alt+8' },
+    { id: 'sec-ml-suggestions', num: '9', label: 'KI-Therapievorschläge', shortcut: 'Alt+9' },
   ];
+
+  const pillTrackRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const track = pillTrackRef.current;
+    if (!track) return;
+    const activeBtn = track.querySelector<HTMLElement>('[data-active="true"]');
+    if (!activeBtn) return;
+    const trackRect = track.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    if (btnRect.left < trackRect.left) {
+      track.scrollTo({
+        left: track.scrollLeft - (trackRect.left - btnRect.left + 24),
+        behavior: 'smooth',
+      });
+    } else if (btnRect.right > trackRect.right) {
+      track.scrollTo({
+        left: track.scrollLeft + (btnRect.right - trackRect.right + 24),
+        behavior: 'smooth',
+      });
+    }
+  }, [activeSection]);
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -218,36 +245,80 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Lower Bar: Continuous Smooth-Scroll Quick-Jump Anchor Pills (NO TABS!) */}
-      <div className="bg-slate-50/80 border-t border-slate-200/80 px-4 lg:px-6 py-1.5 overflow-x-auto scrollbar-none">
-        <div className="max-w-[1700px] mx-auto flex items-center gap-1.5 text-xs whitespace-nowrap">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">
-            Sprungmarken:
-          </span>
-          {navItems.map((item) => {
-            const isActive = activeSection === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => scrollToSection(item.id)}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 ${
-                  isActive
-                    ? 'bg-blue-600 text-white shadow-xs font-semibold'
-                    : 'bg-white text-slate-600 hover:text-blue-700 hover:bg-blue-50/80 border border-slate-200/80'
-                }`}
-              >
-                <span>{item.label}</span>
-                <span
-                  className={`text-[9px] font-mono px-1 py-0.2 rounded ${
-                    isActive ? 'bg-blue-700/60 text-blue-100' : 'bg-slate-100 text-slate-400'
+      {/* Lower Bar: Continuous Smooth-Scroll Quick-Jump Anchor Pills & Global Collapse Buttons */}
+      <div className="bg-slate-50/90 border-t border-slate-200/80 px-3 lg:px-6 py-1.5 backdrop-blur-xs no-scrollbar scrollbar-none">
+        <div className="max-w-[1700px] mx-auto flex items-center justify-between gap-3">
+          <div
+            ref={pillTrackRef}
+            className="flex items-center gap-1.5 text-xs overflow-x-auto no-scrollbar scrollbar-none py-0.5 min-w-0 flex-1 scroll-smooth"
+          >
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0 select-none">
+              Sprungmarken:
+            </span>
+            {navItems.map((item) => {
+              const isActive = activeSection === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  data-active={isActive ? 'true' : 'false'}
+                  onClick={() => scrollToSection(item.id)}
+                  title={`${item.num}. ${item.label} (${item.shortcut})`}
+                  className={`group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all shrink-0 select-none ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-xs font-semibold ring-2 ring-blue-500/25 ring-offset-1 ring-offset-slate-50'
+                      : 'bg-white text-slate-600 hover:text-blue-700 hover:bg-blue-50/80 border border-slate-200/90 hover:border-blue-200 shadow-xs'
                   }`}
                 >
-                  {item.shortcut}
-                </span>
+                  <span
+                    className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold shrink-0 transition-colors ${
+                      isActive
+                        ? 'bg-white text-blue-700 shadow-xs'
+                        : 'bg-slate-100 text-slate-500 border border-slate-200/60 group-hover:bg-blue-100 group-hover:text-blue-700 group-hover:border-blue-200'
+                    }`}
+                  >
+                    {item.num}
+                  </span>
+                  <span className="whitespace-nowrap">{item.label}</span>
+                  <span
+                    className={`hidden 2xl:inline-block text-[9px] font-mono px-1 py-0.2 rounded transition-colors ${
+                      isActive
+                        ? 'bg-blue-700/60 text-blue-100'
+                        : 'bg-slate-100 text-slate-400 group-hover:bg-blue-100/60 group-hover:text-blue-600'
+                    }`}
+                  >
+                    {item.shortcut}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Global Accordion Control Buttons */}
+          <div className="hidden md:flex items-center gap-1.5 shrink-0 pl-2.5 border-l border-slate-200/80 text-xs">
+            {onExpandAll && (
+              <button
+                type="button"
+                onClick={onExpandAll}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200 font-medium text-[11px] transition-colors shadow-xs"
+                title="Alle Abschnitte aufklappen"
+              >
+                <ChevronsDown className="w-3.5 h-3.5 text-slate-500" />
+                <span>Alle aufklappen</span>
               </button>
-            );
-          })}
+            )}
+            {onCollapseComplete && (
+              <button
+                type="button"
+                onClick={onCollapseComplete}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-300 font-medium text-[11px] transition-colors shadow-xs"
+                title="Vollständig erfasste Abschnitte einklappen"
+              >
+                <ChevronsUp className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Fertige einklappen</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </header>

@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { EvaRecord, PssLevel, ProcedureOption } from '../../types/eva';
-import { SectionHeader } from '../SectionHeader';
 import { ShieldCheck, AlertTriangle, ArrowRightCircle, Check } from 'lucide-react';
 
 interface Props {
@@ -105,18 +104,8 @@ export const PssProcedureSection: React.FC<Props> = ({ record, onChange }) => {
     },
   ];
 
-  const isComplete = !!record.prozedere;
-
   return (
-    <div id="sec-pss" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
-      <SectionHeader
-        number={8}
-        title="Schweregrad (PSS) & Empfohlenes Prozedere"
-        subtitle="Standardisierter Poisoning Severity Score (EAPCCT / WHO) und abschließende klinische Versorgungsempfehlung"
-        badge="Sektion 10"
-        isComplete={isComplete}
-      />
-
+    <div>
       {/* Row 1: PSS vor/bei Anruf (Ist-Zustand) */}
       <div className="mb-6">
         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">

@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { EvaRecord } from '../../types/eva';
-import { SectionHeader } from '../SectionHeader';
 import { HeartPulse, Activity, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface Props {
@@ -24,18 +23,8 @@ export const SymptomsVitalsSection: React.FC<Props> = ({ record, onChange }) => 
   const isQtcCritical = !isNaN(qtcNum) && qtcNum > 460;
   const isPhCritical = !isNaN(phNum) && (phNum < 7.25 || phNum > 7.55);
 
-  const isComplete = record.sympKeine || record.sympWachOrientiert || !!record.vitalGcs || !!record.vitalHf;
-
   return (
-    <div id="sec-vitals" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
-      <SectionHeader
-        number={6}
-        title="Symptome & Klinische Vitalbefunde"
-        subtitle="Sofort-Status, neurologischer Zustand (GCS), Kreislauf, respiratorische Parameter und Tox-Labor"
-        badge="Sektion 8"
-        isComplete={isComplete}
-      />
-
+    <div>
       {/* 8.1 Symptome Schnell-Status */}
       <div className="mb-6 p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/80">
         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test tests/run-tests.mjs",
+    "train:ml": "node scripts/train_ml_model.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.62.0",

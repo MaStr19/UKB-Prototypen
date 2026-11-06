@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { EvaRecord, ExposurePattern } from '../../types/eva';
-import { SectionHeader } from '../SectionHeader';
 import { Clock, HelpCircle, MapPin, Route } from 'lucide-react';
 
 interface Props {
@@ -63,18 +62,8 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
     onChange(key, list);
   };
 
-  const isComplete = !!(record.zeitWert && record.aetiologie.length > 0 && record.routeStandard.length > 0);
-
   return (
-    <div id="sec-noxe" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
-      <SectionHeader
-        number={3}
-        title="Expositionsparameter & Modalitäten"
-        subtitle="Zeitpunkt/Latenz, Expositionsmuster (A/S/C/B/U), Ätiologie, Ort und Inkorporationswege"
-        badge="Sektion 5"
-        isComplete={isComplete}
-      />
-
+    <div>
       {/* 4-Spalten klinisches Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Spalte 1: Zeitpunkt & Latenz */}
@@ -123,7 +112,7 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
                   />
                   <select
                     value={record.zeitEinheit}
-                    onChange={(e) => onChange('zeitEinheit', e.target.value as any)}
+                    onChange={(e) => onChange('zeitEinheit', e.target.value as EvaRecord['zeitEinheit'])}
                     className="flex-1 bg-white px-2 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   >
                     {timeUnits.map((u) => (

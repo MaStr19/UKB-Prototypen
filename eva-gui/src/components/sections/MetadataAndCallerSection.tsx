@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { EvaRecord, CallerType, DepartmentType } from '../../types/eva';
-import { SectionHeader } from '../SectionHeader';
 import { Phone, Building, UserCheck, ShieldCheck } from 'lucide-react';
 
 

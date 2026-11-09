@@ -58,7 +58,14 @@ export const PatientSection: React.FC<Props> = ({ record, onChange }) => {
   const bmi = weight > 0 && heightM > 0 ? (weight / (heightM * heightM)).toFixed(1) : null;
 
   return (
-    <div>
+    <div id="sec-patient" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
+      <SectionHeader
+        number={2}
+        title="Patientdaten"
+        badge="Sektion 4"
+        isComplete={isComplete}
+      />
+
       {/* Row 1: Name, Fall-Nr, Geburtsdatum */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 text-xs mb-5">
         <div className="lg:col-span-5">
@@ -102,10 +109,10 @@ export const PatientSection: React.FC<Props> = ({ record, onChange }) => {
         </div>
       </div>
 
-      {/* Row 2: Alter + Einheit, Geschlecht, Schwangerschaft / Stillzeit */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 text-xs mb-5 p-4 rounded-xl bg-slate-50/70 border border-slate-200/80">
+      {/* Row 2: Alter + Einheit, Geschlecht, Sonderstatus: Schwangerschaft / Stillzeit */}
+      <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-5 text-xs mb-5 p-4 rounded-xl bg-slate-50/70 border border-slate-200/80">
         {/* Alter Wert + Einheit */}
-        <div className="lg:col-span-4">
+        <div className="col-span-5">
           <label className="block font-semibold text-slate-700 mb-1">
             Alter (Wert & Einheit)
           </label>
@@ -138,13 +145,15 @@ export const PatientSection: React.FC<Props> = ({ record, onChange }) => {
         </div>
 
         {/* Geschlecht */}
-        <div className="lg:col-span-4">
+        <div className="col-span-3 max-w-xs"> 
+          {/*Überschrift mit Abstand nach unten mb-1*/}
           <label className="block font-semibold text-slate-700 mb-1">Geschlecht</label>
+          {/*Innerer Container als dreispaltiges Raster (grid-cols-3) mit Abstand (gap-1.5), rahmt sie weiß mit einem grauen Rand ein.*/}
           <div className="grid grid-cols-3 gap-1.5 bg-white p-1 rounded-lg border border-slate-200">
             {[
-              { val: 'm', label: '♂ Männlich' },
-              { val: 'w', label: '♀ Weiblich' },
-              { val: 'div', label: '⚧ Divers' },
+              { val: 'm', label: 'M' },
+              { val: 'w', label: 'W' },
+              { val: 'div', label: 'D' },
             ].map((g) => (
               <button
                 key={g.val}
@@ -163,9 +172,9 @@ export const PatientSection: React.FC<Props> = ({ record, onChange }) => {
         </div>
 
         {/* Schwangerschaft / Stillzeit (nur relevant bei w/weiblich) */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4"> {/* Nimmt 4 / 12 Spalten (lg: großer Bildschirm) */}
           <label className="block font-semibold text-slate-700 mb-1">
-            Sonderstatus Schwangerschaft / Stillzeit
+            Sonderstatus
           </label>
           <div className="flex items-center gap-2">
             <button

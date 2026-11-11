@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { SectionHeader } from '../SectionHeader';
 import { EvaRecord, AgeCategory, Gender } from '../../types/eva';
 import { User, Scale, Ruler, Sparkles, Baby } from 'lucide-react';
 
@@ -56,6 +57,9 @@ export const PatientSection: React.FC<Props> = ({ record, onChange }) => {
   const weight = parseFloat(record.gewichtKg);
   const heightM = parseFloat(record.groesseCm) / 100;
   const bmi = weight > 0 && heightM > 0 ? (weight / (heightM * heightM)).toFixed(1) : null;
+  const isComplete = Boolean(
+    record.patientName && record.alterWert && record.geschlecht
+  );
 
   return (
     <div id="sec-patient" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { SectionHeader } from '../SectionHeader';
 import { EvaRecord, CallerType, DepartmentType } from '../../types/eva';
 import { Phone, Building, UserCheck, ShieldCheck } from 'lucide-react';
 

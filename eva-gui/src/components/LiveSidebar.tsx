@@ -60,7 +60,10 @@ export const LiveSidebar: React.FC<LiveSidebarProps> = ({ record }) => {
     {
       id: 'pss',
       label: 'PSS & empfohlenes Prozedere',
-      isOk: Boolean(record.prozedere),
+      isOk: Boolean(record.prozedere) &&
+      (record.pssVor === 'U' ||
+       record.pssPot === 'U' ||
+       Number(record.pssVor) <= Number(record.pssPot)),
       critical: true,
       hint: 'Abschließende Risikobewertung',
     },

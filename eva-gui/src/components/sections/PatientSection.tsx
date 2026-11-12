@@ -56,8 +56,10 @@ export const PatientSection: React.FC<Props> = ({ record, onChange }) => {
   const weight = parseFloat(record.gewichtKg);
   const heightM = parseFloat(record.groesseCm) / 100;
   const bmi = weight > 0 && heightM > 0 ? (weight / (heightM * heightM)).toFixed(1) : null;
-  //keine ahnung was isComplete ist
-  const isComplete = false;
+  const isComplete = Boolean(
+    record.patientName && record.alterWert && record.geschlecht
+  );
+
   return (
     <div id="sec-patient" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
       <SectionHeader

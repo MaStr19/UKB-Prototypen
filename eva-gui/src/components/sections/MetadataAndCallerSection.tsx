@@ -3,7 +3,7 @@
 import React from 'react';
 import { EvaRecord, CallerType, DepartmentType } from '../../types/eva';
 import { Phone, Building, UserCheck, ShieldCheck } from 'lucide-react';
-import { SectionHeader } from "../SectionHeader";
+import { SectionHeader } from '../SectionHeader';
 
 import { AgeCategory, Gender } from '../../types/eva';
 import { User, Scale, Ruler, Sparkles, Baby } from 'lucide-react';

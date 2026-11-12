@@ -110,7 +110,7 @@ export const MetadataAndCallerSection: React.FC<Props> = ({ record, onChange }) 
       <SectionHeader
         number={1}
         title="Anruf und Patientdaten"
-        badge="Sektion 1 - 4"
+        badge="Sektion 1"
         isComplete={isComplete}
       />
 
@@ -153,10 +153,10 @@ export const MetadataAndCallerSection: React.FC<Props> = ({ record, onChange }) 
           />
         </div>
 
-        {/* Anruf-Typ (Anfrage / Folgeanruf) */}
+        {/* Anruf-Typ (Anfrage / Folgeanruf/ Fehlanruf) */}
         <div className="col-span-3 max-w-xs">
           <label className="block font-semibold text-slate-700 mb-1">Anruftyp</label>
-          <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button
               type="button"
               onClick={() => onChange('anrufTyp', 'Anfrage')}
@@ -178,6 +178,18 @@ export const MetadataAndCallerSection: React.FC<Props> = ({ record, onChange }) 
               }`}
             >
               Folgeanruf
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onChange('anrufTyp', 'Fehlanruf')}
+              className={`py-1.5 px-2 rounded-md font-semibold text-xs transition-colors ${
+                record.anrufTyp === 'Fehlanruf' //Prüft ob Button gerade ausgewählt ist 
+                  ? 'bg-blue-600 text-white shadow-xs' // wenn aktiv wird blau mit weißer Schrift
+                  : 'text-slate-600 hover:text-slate-900' // wenn inaktiv bleibt Hintergrund transparent und Schrift grau
+              }`}
+            >
+              Fehlanruf
             </button>
           </div>
         </div>

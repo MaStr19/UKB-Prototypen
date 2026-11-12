@@ -94,12 +94,14 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
             </span>
 
             {/* Präfix + Wert + Einheit */}
-            <div className="space-y-3 mb-4">
-              <div>
+            <div className="grid grid-cols-12 gap-2 mb-4">
+
+            {/* 1. Spalte: Zeitbezug (Präfix) - Nimmt 5 von 12 Spalten ein */}
+              <div className="col-span-5">
                 <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                   Zeitbezug (Präfix)
                 </label>
-                <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-lg border border-slate-200">
+                <div className="grid grid-cols-3 bg-white p-1 rounded-lg border border-slate-200">
                   {(['vor', 'um', 'über'] as const).map((pref) => (
                     <button
                       key={pref}
@@ -117,22 +119,27 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
                 </div>
               </div>
 
-              <div>
+              {/* 2. Spalte: Dauer / Latenzzeit - Nimmt 7 von 12 Spalten ein */}
+              <div className="col-span-7">
                 <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                   Dauer / Latenzzeit
                 </label>
-                <div className="flex gap-1.5">
+                <div className="flex gap-1">
+
+                  {/* Eingabefeld (Dauer) kann sich mit flex-1 ausdehnt */}
                   <input
                     type="text"
                     value={record.zeitWert}
                     onChange={(e) => onChange('zeitWert', e.target.value)}
-                    className="w-20 px-2.5 py-1.5 bg-white text-xs font-bold rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="flex-1 min-w-0 px-2.5 py-1.5 bg-white text-xs font-bold rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     placeholder="z.B. 20"
                   />
+
+                  {/* Dropdown (Min) hat eine feste, kompaktere Breite w-19 */}
                   <select
                     value={record.zeitEinheit}
                     onChange={(e) => onChange('zeitEinheit', e.target.value as EvaRecord['zeitEinheit'])}
-                    className="flex-1 bg-white px-2 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-19 shrink-0 bg-white px-2 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   >
                     {timeUnits.map((u) => (
                       <option key={u} value={u}>

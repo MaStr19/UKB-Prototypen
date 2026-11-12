@@ -129,7 +129,7 @@ export const PssProcedureSection: React.FC<Props> = ({ record, onChange }) => {
                 key={p.level}
                 type="button"
                 onClick={() => onChange('pssVor', p.level)}
-                className={`p-3 rounded-xl text-left border transition-all flex flex-col justify-between min-h-[92px] ${
+                className={`p-2 rounded-xl text-left border transition-all flex flex-col gap-1] ${
                   isSelected
                     ? p.activeClass
                     : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300'
@@ -141,7 +141,7 @@ export const PssProcedureSection: React.FC<Props> = ({ record, onChange }) => {
                 </div>
                 <div>
                   <div className="font-bold text-xs leading-tight mb-0.5">{p.title}</div>
-                  <div className={`text-[10px] line-clamp-2 leading-tight ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>
+                  <div className={`hidden text-[10px] line-clamp-2 leading-tight ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>
                     {p.description}
                   </div>
                 </div>
@@ -169,16 +169,23 @@ export const PssProcedureSection: React.FC<Props> = ({ record, onChange }) => {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
           {pssLevels.map((p) => {
             const isSelected = record.pssPot === p.level;
+            // max PSS darf nicht kleiner als PSS vorher sein
+            const isTooLow = 
+            record.pssVor !== 'U' &&
+            p.level !== 'U' &&
+            Number(p.level) < Number(record.pssVor);
+
             return (
               <button
                 key={p.level}
                 type="button"
+                disabled={isTooLow}
                 onClick={() => onChange('pssPot', p.level)}
-                className={`p-2.5 rounded-xl text-left border transition-all flex flex-col justify-between min-h-[76px] ${
+                className={`p-2 rounded-xl text-left border transition-all flex flex-col gap-1 ${
                   isSelected
                     ? p.activeClass
                     : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
+                    } ${isTooLow ? 'opacity-40 cursor-not-allowed' : ''} `}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-xs">Potentiell {p.level}</span>
@@ -189,6 +196,14 @@ export const PssProcedureSection: React.FC<Props> = ({ record, onChange }) => {
             );
           })}
         </div>
+          {record.pssVor !== 'U' &&
+            record.pssPot !== 'U' &&
+            Number(record.pssPot) < Number(record.pssVor) && (
+              <p className="mt-2 text-sm font-semibold text-red-600">
+                Achtung: Der maximale PSS darf nicht kleiner
+                als der aktuelle PSS sein.
+              </p>  
+            )}
       </div>
 
       {/* Row 3: Wegen Noxe empfohlenes Prozedere */}
@@ -198,7 +213,7 @@ export const PssProcedureSection: React.FC<Props> = ({ record, onChange }) => {
           10.3 Wegen Noxe empfohlenes Prozedere
         </label>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5">
           {procedures.map((proc) => {
             const isSelected = record.prozedere === proc.option;
             return (

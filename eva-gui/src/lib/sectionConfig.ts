@@ -114,9 +114,9 @@ export const SECTION_CONFIGS: Record<string, SectionConfig> = {
   'sec-patient': {
     id: 'sec-patient',
     number: 2,
-    title: 'Patientendaten & Biometrie',
-    subtitle: 'Identifikation, standardisierte Alterskategorie (EAPCCT) und anthropometrische Werte für Tox-Berechnungen',
-    badge: 'Sektion 4',
+    title: 'Patient',
+    subtitle: '',
+    badge: '',
     validate: (record: EvaRecord): SectionValidation => {
       const errors: string[] = [];
       const warnings: string[] = [];
@@ -203,9 +203,9 @@ export const SECTION_CONFIGS: Record<string, SectionConfig> = {
   'sec-noxe': {
     id: 'sec-noxe',
     number: 3,
-    title: 'Expositionsparameter & Modalitäten',
-    subtitle: 'Zeitpunkt/Latenz, Expositionsmuster (A/S/C/B/U), Ätiologie, Ort und Inkorporationswege',
-    badge: 'Sektion 5',
+    title: 'Exposition & Substanz',
+    subtitle: '',
+    badge: 'Sektion 2',
     validate: (record: EvaRecord): SectionValidation => {
       const errors: string[] = [];
       const warnings: string[] = [];
@@ -271,9 +271,9 @@ export const SECTION_CONFIGS: Record<string, SectionConfig> = {
   'sec-substanzen': {
     id: 'sec-substanzen',
     number: 4,
-    title: 'Substanztabelle (7 Agenzien-Matrix)',
-    subtitle: 'Erfassung aller toxischen Agentien mit Expositionssicherheit (G/N/K), Toxizität (G/N/K/T) und Mengeneinstufung (G/N/U/max)',
-    badge: 'Sektion 6',
+    title: 'Substanztabelle',
+    subtitle: '',
+    badge: '',
     validate: (record: EvaRecord): SectionValidation => {
       const errors: string[] = [];
       const warnings: string[] = [];

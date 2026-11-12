@@ -4,7 +4,7 @@ import React from 'react';
 import { SectionHeader } from '../SectionHeader';
 import { EvaRecord, AgeCategory, Gender } from '../../types/eva';
 import { User, Scale, Ruler, Sparkles, Baby } from 'lucide-react';
-
+import { SectionHeader } from "../SectionHeader";
 interface Props {
   record: EvaRecord;
   onChange: <K extends keyof EvaRecord>(key: K, value: EvaRecord[K]) => void;
@@ -57,10 +57,15 @@ export const PatientSection: React.FC<Props> = ({ record, onChange }) => {
   const weight = parseFloat(record.gewichtKg);
   const heightM = parseFloat(record.groesseCm) / 100;
   const bmi = weight > 0 && heightM > 0 ? (weight / (heightM * heightM)).toFixed(1) : null;
+<<<<<<< HEAD
   const isComplete = Boolean(
     record.patientName && record.alterWert && record.geschlecht
   );
 
+=======
+  //keine ahnung was isComplete ist
+  const isComplete = false;
+>>>>>>> origin/master
   return (
     <div id="sec-patient" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
       <SectionHeader

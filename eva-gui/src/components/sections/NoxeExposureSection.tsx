@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
-import { EvaRecord, ExposurePattern } from '../../types/eva';
+import { EvaRecord, ExposurePattern, SubstanceRow } from '../../types/eva';
 import { Clock, HelpCircle, MapPin, Route } from 'lucide-react';
+
+import { FlaskConical, Trash2, Info } from 'lucide-react'; 
 
 interface Props {
   record: EvaRecord;
@@ -62,12 +64,30 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
     onChange(key, list);
   };
 
+  {/* update- & clearRow sind für Expositionstabelle */}
+  const updateRow = (index: number, updates: Partial<SubstanceRow>) => {
+      const updated = [...record.substanzen];
+      updated[index] = { ...updated[index], ...updates };
+      onChange('substanzen', updated);
+    };
+  
+    const clearRow = (index: number) => {
+      updateRow(index, {
+        expoFlag: '',
+        noxeName: '',
+        noxeFlag: '',
+        mengeVal: '',
+        mengeFlag: '',
+      });
+    };
+
   return (
     <div>
-      {/* 4-Spalten klinisches Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Spalte 1: Zeitpunkt & Latenz */}
-        <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
+      {/* Der gemeinsame Container für alle 4 Kategorien 12-Spalten*/}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
+
+        {/* Spalte 1: Zeitpunkt & Latenz , nimmt 4/12 Spalten */}
+        <div className="lg:col-span-4 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-3">
               <Clock className="w-3.5 h-3.5 text-blue-600" />
@@ -75,12 +95,14 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
             </span>
 
             {/* Präfix + Wert + Einheit */}
-            <div className="space-y-3 mb-4">
-              <div>
+            <div className="grid grid-cols-12 gap-2 mb-4">
+
+            {/* 1. Spalte: Zeitbezug (Präfix) - Nimmt 5 von 12 Spalten ein */}
+              <div className="col-span-5">
                 <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                   Zeitbezug (Präfix)
                 </label>
-                <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-lg border border-slate-200">
+                <div className="grid grid-cols-3 bg-white p-1 rounded-lg border border-slate-200">
                   {(['vor', 'um', 'über'] as const).map((pref) => (
                     <button
                       key={pref}
@@ -98,22 +120,27 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
                 </div>
               </div>
 
-              <div>
+              {/* 2. Spalte: Dauer / Latenzzeit - Nimmt 7 von 12 Spalten ein */}
+              <div className="col-span-7">
                 <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                   Dauer / Latenzzeit
                 </label>
-                <div className="flex gap-1.5">
+                <div className="flex gap-1">
+
+                  {/* Eingabefeld (Dauer) kann sich mit flex-1 ausdehnt */}
                   <input
                     type="text"
                     value={record.zeitWert}
                     onChange={(e) => onChange('zeitWert', e.target.value)}
-                    className="w-20 px-2.5 py-1.5 bg-white text-xs font-bold rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="flex-1 min-w-0 px-2.5 py-1.5 bg-white text-xs font-bold rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     placeholder="z.B. 20"
                   />
+
+                  {/* Dropdown (Min) hat eine feste, kompaktere Breite w-19 */}
                   <select
                     value={record.zeitEinheit}
                     onChange={(e) => onChange('zeitEinheit', e.target.value as EvaRecord['zeitEinheit'])}
-                    className="flex-1 bg-white px-2 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-19 shrink-0 bg-white px-2 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   >
                     {timeUnits.map((u) => (
                       <option key={u} value={u}>
@@ -156,8 +183,8 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
           </div>
         </div>
 
-        {/* Spalte 2: Ätiologie */}
-        <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
+        {/* Spalte 2: Ätiologie , nimmt 3/12 Spalten*/}
+        <div className="lg:col-span-3 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-3">
               <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
@@ -194,8 +221,8 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
           </div>
         </div>
 
-        {/* Spalte 3: Ort */}
-        <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
+        {/* Spalte 3: Ort , nimmt 2/12 Spalten*/}
+        <div className="lg:col-span-2 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-3">
               <MapPin className="w-3.5 h-3.5 text-blue-600" />
@@ -232,8 +259,8 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
           </div>
         </div>
 
-        {/* Spalte 4: Expositionsroute */}
-        <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
+        {/* Spalte 4: Expositionsroute , nimmt 3/12 Spalten*/}
+        <div className="lg:col-span-3 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-2">
               <Route className="w-3.5 h-3.5 text-blue-600" />
@@ -304,6 +331,192 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
           </div>
         </div>
       </div>
+
+          {/************ Substanztabelle *************/}  
+    <div>
+      {/* Table Legend */}
+      <div className="mt-2 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-slate-700">
+          <Info className="w-4 h-4 text-blue-600 shrink-0" />
+          <span className="font-semibold">Klinische Flag-Nomenklatur:</span>
+        </div>
+        <div className="flex flex-wrap gap-4 text-[11px] text-slate-600">
+          <div>
+            <strong className="text-blue-800">Exposition:</strong> G (Gesichert), N (Nicht gesichert), K (Keine Expo)
+          </div>
+          <div>
+            <strong className="text-rose-800">Noxe:</strong> G (Giftig), N (Nicht giftig), K (Kontaminiert), T (Toxische Dosis)
+          </div>
+          <div>
+            <strong className="text-amber-800">Menge:</strong> G (Gesichert), N (Nicht gesichert), U (Unbekannt), max (Worst-Case)
+          </div>
+        </div>
+      </div>
+
+      {/* 7-Row High-Density Medical Table */}
+      <div className="overflow-x-auto rounded-xl border border-slate-200">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr className="bg-slate-100/80 border-b border-slate-200 text-slate-700 font-bold">
+              <th className="py-2.5 px-3 w-10 text-center">#</th>
+              <th className="py-2.5 px-3 w-48 text-center border-r border-slate-200">
+                <div className="leading-tight">Exposition</div>
+                <div className="text-[10px] font-normal text-slate-500">G &bull; N &bull; K</div>
+              </th>
+              <th className="py-2.5 px-4 min-w-[280px] border-r border-slate-200">
+                <div className="flex items-center justify-between">
+                  <span>Noxe / Handelsname / Wirkstoff</span>
+                  <span className="text-[10px] font-normal text-slate-500">G &bull; N &bull; K &bull; T</span>
+                </div>
+              </th>
+              <th className="py-2.5 px-4 min-w-[240px] border-r border-slate-200">
+                <div className="flex items-center justify-between">
+                  <span>Menge / Dosis</span>
+                  <span className="text-[10px] font-normal text-slate-500">G &bull; N &bull; U &bull; max</span>
+                </div>
+              </th>
+              <th className="py-2.5 px-3 w-16 text-center">Aktion</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200">
+            {record.substanzen.map((row, idx) => {
+              const hasData = !!(row.noxeName || row.mengeVal || row.expoFlag);
+              return (
+                <tr
+                  key={row.id}
+                  className={`transition-colors ${
+                    hasData ? 'bg-blue-50/20' : idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
+                  } hover:bg-blue-50/40`}
+                >
+                  {/* Row Number */}
+                  <td className="py-2 px-3 text-center font-bold text-slate-400">
+                    {idx + 1}
+                  </td>
+
+                  {/* Exposition Flags (G / N / K) */}
+                  <td className="py-2 px-2 border-r border-slate-200">
+                    <div className="flex items-center justify-center gap-1 bg-white p-1 rounded-lg border border-slate-200">
+                      {[
+                        { flag: 'G', label: 'G', title: 'Gesichert' },
+                        { flag: 'N', label: 'N', title: 'Nicht gesichert' },
+                        { flag: 'K', label: 'K', title: 'Keine Exposition' },
+                      ].map((f) => {
+                        const isSelected = row.expoFlag === f.flag;
+                        return (
+                          <button
+                            key={f.flag}
+                            type="button"
+                            title={f.title}
+                            onClick={() => updateRow(idx, { expoFlag: isSelected ? '' : (f.flag as EvaRecord['substanzen'][number]['expoFlag']) })}
+                            className={`w-8 py-1 rounded text-xs font-bold transition-all ${
+                              isSelected
+                                ? f.flag === 'G'
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : f.flag === 'N'
+                                  ? 'bg-amber-500 text-white shadow-xs'
+                                  : 'bg-slate-600 text-white shadow-xs'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            {f.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </td>
+
+                  {/* Noxe Text + Flags (G / N / K / T) */}
+                  <td className="py-2 px-3 border-r border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={row.noxeName}
+                        onChange={(e) => updateRow(idx, { noxeName: e.target.value })}
+                        placeholder={idx === 0 ? 'Leitnoxe: z.B. Paracetamol 500mg oder Somat Tab' : 'Weitere Noxe...'}
+                        className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium text-slate-900 bg-white"
+                      />
+                      <div className="flex items-center gap-0.5 bg-white p-0.5 rounded-lg border border-slate-200 shrink-0">
+                        {[
+                          { flag: 'G', title: 'Giftig', color: 'bg-emerald-600 text-white' },
+                          { flag: 'N', title: 'Nicht giftig', color: 'bg-slate-600 text-white' },
+                          { flag: 'K', title: 'Kontaminiert', color: 'bg-amber-600 text-white' },
+                          { flag: 'T', title: 'Toxische Dosis erreicht', color: 'bg-rose-600 text-white font-black animate-pulse' },
+                        ].map((f) => {
+                          const isSelected = row.noxeFlag === f.flag;
+                          return (
+                            <button
+                              key={f.flag}
+                              type="button"
+                              title={f.title}
+                              onClick={() => updateRow(idx, { noxeFlag: isSelected ? '' : (f.flag as EvaRecord['substanzen'][number]['noxeFlag']) })}
+                              className={`w-6 py-1 text-[11px] font-bold rounded ${
+                                isSelected ? f.color : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                              }`}
+                            >
+                              {f.flag}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Menge Text + Flags (G / N / U / max) */}
+                  <td className="py-2 px-3 border-r border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={row.mengeVal}
+                        onChange={(e) => updateRow(idx, { mengeVal: e.target.value })}
+                        placeholder={idx === 0 ? 'z.B. 10 Tabletten, 1 Schluck' : 'Menge...'}
+                        className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium text-slate-900 bg-white"
+                      />
+                      <div className="flex items-center gap-0.5 bg-white p-0.5 rounded-lg border border-slate-200 shrink-0">
+                        {[
+                          { flag: 'G', title: 'Gesichert abgezählt', color: 'bg-emerald-600 text-white' },
+                          { flag: 'N', title: 'Nicht gesichert / geschätzt', color: 'bg-amber-500 text-white' },
+                          { flag: 'U', title: 'Unbekannt', color: 'bg-slate-600 text-white' },
+                          { flag: 'max', title: 'Worst-Case / Maximaldosis', color: 'bg-rose-600 text-white font-bold' },
+                        ].map((f) => {
+                          const isSelected = row.mengeFlag === f.flag;
+                          return (
+                            <button
+                              key={f.flag}
+                              type="button"
+                              title={f.title}
+                              onClick={() => updateRow(idx, { mengeFlag: isSelected ? '' : (f.flag as EvaRecord['substanzen'][number]['mengeFlag']) })}
+                              className={`px-1.5 py-1 text-[10px] font-bold rounded ${
+                                isSelected ? f.color : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                              }`}
+                            >
+                              {f.flag}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Clear button */}
+                  <td className="py-2 px-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => clearRow(idx)}
+                      disabled={!hasData}
+                      title="Zeile leeren"
+                      className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div> {/* Ende Tabelle */}
+        
     </div>
   );
 };

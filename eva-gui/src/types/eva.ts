@@ -74,7 +74,7 @@ export interface EvaRecord {
   berater: string;
   datum: string;
   uhrzeit: string;
-  anrufTyp: 'Anfrage' | 'Folgeanruf';
+  anrufTyp: 'Anfrage' | 'Folgeanruf' | 'Fehlanruf';
   flagTier: boolean;
   flagFuB: boolean;
   flagFuTel: boolean;

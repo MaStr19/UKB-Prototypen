@@ -129,7 +129,7 @@ export const PssProcedureSection: React.FC<Props> = ({ record, onChange }) => {
                 key={p.level}
                 type="button"
                 onClick={() => onChange('pssVor', p.level)}
-                className={`p-3 rounded-xl text-left border transition-all flex flex-col justify-between min-h-[92px] ${
+                className={`p-2 rounded-xl text-left border transition-all flex flex-col gap-1] ${
                   isSelected
                     ? p.activeClass
                     : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300'
@@ -141,7 +141,7 @@ export const PssProcedureSection: React.FC<Props> = ({ record, onChange }) => {
                 </div>
                 <div>
                   <div className="font-bold text-xs leading-tight mb-0.5">{p.title}</div>
-                  <div className={`text-[10px] line-clamp-2 leading-tight ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>
+                  <div className={`hidden text-[10px] line-clamp-2 leading-tight ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>
                     {p.description}
                   </div>
                 </div>
@@ -181,7 +181,7 @@ export const PssProcedureSection: React.FC<Props> = ({ record, onChange }) => {
                 type="button"
                 disabled={isTooLow}
                 onClick={() => onChange('pssPot', p.level)}
-                className={`p-2.5 rounded-xl text-left border transition-all flex flex-col justify-between min-h-[76px] ${
+                className={`p-2 rounded-xl text-left border transition-all flex flex-col gap-1 ${
                   isSelected
                     ? p.activeClass
                     : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -202,7 +202,7 @@ export const PssProcedureSection: React.FC<Props> = ({ record, onChange }) => {
               <p className="mt-2 text-sm font-semibold text-red-600">
                 Achtung: Der maximale PSS darf nicht kleiner
                 als der aktuelle PSS sein.
-              </p>
+              </p>  
             )}
       </div>
 

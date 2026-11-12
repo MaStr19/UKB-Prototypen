@@ -83,10 +83,11 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
 
   return (
     <div>
-      {/* 4-Spalten klinisches Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Spalte 1: Zeitpunkt & Latenz */}
-        <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
+      {/* Der gemeinsame Container für alle 4 Kategorien 12-Spalten*/}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
+
+        {/* Spalte 1: Zeitpunkt & Latenz , nimmt 4/12 Spalten */}
+        <div className="lg:col-span-4 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-3">
               <Clock className="w-3.5 h-3.5 text-blue-600" />
@@ -182,8 +183,8 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
           </div>
         </div>
 
-        {/* Spalte 2: Ätiologie */}
-        <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
+        {/* Spalte 2: Ätiologie , nimmt 3/12 Spalten*/}
+        <div className="lg:col-span-3 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-3">
               <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
@@ -220,8 +221,8 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
           </div>
         </div>
 
-        {/* Spalte 3: Ort */}
-        <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
+        {/* Spalte 3: Ort , nimmt 2/12 Spalten*/}
+        <div className="lg:col-span-2 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-3">
               <MapPin className="w-3.5 h-3.5 text-blue-600" />
@@ -258,8 +259,8 @@ export const NoxeExposureSection: React.FC<Props> = ({ record, onChange }) => {
           </div>
         </div>
 
-        {/* Spalte 4: Expositionsroute */}
-        <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
+        {/* Spalte 4: Expositionsroute , nimmt 3/12 Spalten*/}
+        <div className="lg:col-span-3 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-2">
               <Route className="w-3.5 h-3.5 text-blue-600" />

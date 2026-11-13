@@ -50,7 +50,7 @@ export const SECTION_CONFIGS: Record<string, SectionConfig> = {
     number: 1,
     title: 'Kopfbereich, Anrufer & Quellen',
     subtitle: 'Stammdaten des Notrufs, Identifikation des Anrufers und konsultierte Tox-Datenbanken',
-    badge: 'Sektion 1 - 3',
+    badge: 'Sektion 1',
     validate: (record: EvaRecord): SectionValidation => {
       const errors: string[] = [];
       const warnings: string[] = [];
@@ -111,98 +111,9 @@ export const SECTION_CONFIGS: Record<string, SectionConfig> = {
     },
   },
 
-  'sec-patient': {
-    id: 'sec-patient',
-    number: 2,
-    title: 'Patient',
-    subtitle: '',
-    badge: '',
-    validate: (record: EvaRecord): SectionValidation => {
-      const errors: string[] = [];
-      const warnings: string[] = [];
-
-      // Numeric validations
-      const ageNum = parseNumberStrict(record.alterWert);
-      if (record.alterWert?.trim() !== '') {
-        if (Number.isNaN(ageNum)) {
-          errors.push('Alter muss eine gültige Zahl sein.');
-        } else if (ageNum !== null && ageNum < 0) {
-          errors.push('Alter darf nicht negativ sein.');
-        }
-      }
-
-      const weightNum = parseNumberStrict(record.gewichtKg);
-      if (record.gewichtKg?.trim() !== '') {
-        if (Number.isNaN(weightNum)) {
-          errors.push('Körpergewicht muss eine gültige Zahl sein.');
-        } else if (weightNum !== null && weightNum <= 0) {
-          errors.push('Körpergewicht muss positiv sein.');
-        }
-      }
-
-      const heightNum = parseNumberStrict(record.groesseCm);
-      if (record.groesseCm?.trim() !== '') {
-        if (Number.isNaN(heightNum)) {
-          errors.push('Körpergröße muss eine gültige Zahl sein.');
-        } else if (heightNum !== null && heightNum <= 0) {
-          errors.push('Körpergröße muss positiv sein.');
-        }
-      }
-
-      if (!record.patientName?.trim()) {
-        warnings.push('Patientenname fehlt.');
-      }
-      if (!record.alterWert?.trim()) {
-        warnings.push('Alter fehlt.');
-      }
-      if (!record.geschlecht) {
-        warnings.push('Geschlecht nicht ausgewählt.');
-      }
-
-      const isComplete = Boolean(
-        record.patientName?.trim() &&
-        record.alterWert?.trim() &&
-        record.geschlecht &&
-        errors.length === 0
-      );
-
-      return {
-        isComplete,
-        hasWarnings: warnings.length > 0 || errors.length > 0,
-        errors,
-        warnings,
-      };
-    },
-    summarize: (record: EvaRecord): SummaryItem[] => {
-      const items: SummaryItem[] = [];
-      if (record.patientName?.trim()) {
-        items.push({ label: 'Patient', value: truncateText(record.patientName), highlight: true });
-      }
-      if (record.alterWert?.trim()) {
-        items.push({ label: 'Alter', value: `${record.alterWert} ${record.alterEinheit || 'Jahre'}` });
-      }
-      if (record.geschlecht) {
-        items.push({ label: 'Geschlecht', value: record.geschlecht.toUpperCase() });
-      }
-      if (record.alterskategorie) {
-        items.push({ label: 'Kategorie', value: record.alterskategorie });
-      }
-      if (record.gewichtKg?.trim()) {
-        items.push({ label: 'Gewicht', value: `${record.gewichtKg} kg` });
-      }
-      if (record.schwanger) {
-        items.push({ label: 'Gravidität', value: record.ssw ? `SSW ${record.ssw}` : 'ja', highlight: true });
-      }
-      if (record.stillzeit) {
-        items.push({ label: 'Stillzeit', value: 'ja', highlight: true });
-      }
-      return items;
-    },
-  },
-
   'sec-noxe': {
     id: 'sec-noxe',
-    number: 3,
+    number: 2,
     title: 'Exposition & Substanz',
     subtitle: '',
     badge: 'Sektion 2',
@@ -268,56 +179,12 @@ export const SECTION_CONFIGS: Record<string, SectionConfig> = {
     },
   },
 
-  'sec-substanzen': {
-    id: 'sec-substanzen',
-    number: 4,
-    title: 'Substanztabelle',
-    subtitle: '',
-    badge: '',
-    validate: (record: EvaRecord): SectionValidation => {
-      const errors: string[] = [];
-      const warnings: string[] = [];
-
-      const enteredSubstances = record.substanzen.filter((s) => s.noxeName?.trim().length > 0);
-      if (enteredSubstances.length === 0) {
-        warnings.push('Mindestens eine Leitsubstanz / Noxe muss erfasst sein.');
-      }
-
-      const isComplete = enteredSubstances.length > 0 && errors.length === 0;
-
-      return {
-        isComplete,
-        hasWarnings: warnings.length > 0 || errors.length > 0,
-        errors,
-        warnings,
-      };
-    },
-    summarize: (record: EvaRecord): SummaryItem[] => {
-      const items: SummaryItem[] = [];
-      const activeSubs = record.substanzen.filter((s) => s.noxeName?.trim().length > 0);
-      if (activeSubs.length === 0) {
-        return items;
-      }
-      activeSubs.forEach((s, idx) => {
-        const flagText = [s.noxeFlag ? `[${s.noxeFlag}]` : '', s.mengeVal ? `(${s.mengeVal})` : '']
-          .filter(Boolean)
-          .join(' ');
-        items.push({
-          label: idx === 0 ? 'Leitnoxe' : `Noxe #${s.id}`,
-          value: `${truncateText(s.noxeName, 40)} ${flagText}`.trim(),
-          highlight: idx === 0 || s.noxeFlag === 'T',
-        });
-      });
-      return items;
-    },
-  },
-
   'sec-anamnese': {
     id: 'sec-anamnese',
-    number: 5,
+    number: 3,
     title: 'Anamnese, Vorerkrankungen & Vormedikation',
     subtitle: 'Detaillierte Schilderung des Notfallhergangs, Auffindesituation, Zeugenaussagen und chronische Medikation',
-    badge: 'Sektion 7',
+    badge: 'Sektion 3',
     validate: (record: EvaRecord): SectionValidation => {
       const errors: string[] = [];
       const warnings: string[] = [];
@@ -352,10 +219,10 @@ export const SECTION_CONFIGS: Record<string, SectionConfig> = {
 
   'sec-vitals': {
     id: 'sec-vitals',
-    number: 6,
+    number: 4,
     title: 'Symptome & Klinische Vitalbefunde',
     subtitle: 'Sofort-Status, neurologischer Zustand (GCS), Kreislauf, respiratorische Parameter und Tox-Labor',
-    badge: 'Sektion 8',
+    badge: 'Sektion 4',
     validate: (record: EvaRecord): SectionValidation => {
       const errors: string[] = [];
       const warnings: string[] = [];
@@ -461,10 +328,10 @@ export const SECTION_CONFIGS: Record<string, SectionConfig> = {
 
   'sec-therapien': {
     id: 'sec-therapien',
-    number: 7,
+    number: 5,
     title: 'Therapien, Maßnahmen & Antidote',
     subtitle: '3-Spalten-Interventionsmatrix (v: Vorher erfolgt | e: Empfohlen durch GIZ | g: Vor Ort gegeben) und Notfallmedikamente',
-    badge: 'Sektion 9',
+    badge: 'Sektion 5',
     validate: (record: EvaRecord): SectionValidation => {
       const errors: string[] = [];
       const warnings: string[] = [];
@@ -530,10 +397,10 @@ export const SECTION_CONFIGS: Record<string, SectionConfig> = {
 
   'sec-pss': {
     id: 'sec-pss',
-    number: 8,
+    number: 6,
     title: 'Poisoning Severity Score (PSS) & Prozedere',
     subtitle: 'Standardisierter Schweregrad-Score (EAPCCT/WHO) und empfohlenes Verlegungs-/Entlassprozedere',
-    badge: 'Sektion 10',
+    badge: 'Sektion 6',
     validate: (record: EvaRecord): SectionValidation => {
       const errors: string[] = [];
       const warnings: string[] = [];
@@ -567,7 +434,7 @@ export const SECTION_CONFIGS: Record<string, SectionConfig> = {
 
   'sec-ml-suggestions': {
     id: 'sec-ml-suggestions',
-    number: 9,
+    number: 7,
     title: 'KI-Therapie- & Antidot-Vorschläge (ML)',
     subtitle: 'Interpretable Machine-Learning-Entscheidungshilfe basierend auf Leitsubstanz, Vitalparametern und PSS',
     badge: 'Feature 2 • ML Assist',

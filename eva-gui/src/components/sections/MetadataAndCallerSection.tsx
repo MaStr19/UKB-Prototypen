@@ -107,12 +107,7 @@ export const MetadataAndCallerSection: React.FC<Props> = ({ record, onChange }) 
 
   return (
     <div id="sec-metadata" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-3"> {/*p-3 Abstand nach oben von Titel*/}
-      <SectionHeader
-        number={1}
-        title="Anruf und Patientdaten"
-        badge="Sektion 1"
-        isComplete={isComplete}
-      />
+    
 
       {/* Row 1: Header Meta (Berater, Datum, Uhrzeit, Anruftyp, Flags, AZ) */}
       {/* unten steht mb- für den Abstand nach unten, hier Abstand zwischen Sonderflags und Anrufertyp*/}

@@ -10,6 +10,15 @@ interface Props {
 }
 
 export const AnamnesisSection: React.FC<Props> = ({ record, onChange }) => {
+
+  const [veStatus, setVeStatus] = React.useState<
+    'keine' | 'vorhanden' | 'unbekannt'
+  >('unbekannt');
+
+  const [vmStatus, setVmStatus] = React.useState<
+    'keine' | 'vorhanden' | 'unbekannt'
+  >('unbekannt');
+
   const snippets = [
     'Mund unmittelbar mit Wasser ausgespült.',
     'Einmaliges schwallartiges Erbrechen.',
@@ -28,6 +37,10 @@ export const AnamnesisSection: React.FC<Props> = ({ record, onChange }) => {
 
   return (
     <div>
+    <details className="mb-3">
+      <summary className="cursor-pointer text-xs font-semibold text-blue-700 mb-2">
+        Vorschläge anzeigen
+      </summary>
       {/* Row 1: Quick Snippets */}
       <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs">
         <span className="text-slate-400 font-semibold text-[11px] flex items-center gap-1 mr-1">
@@ -45,6 +58,7 @@ export const AnamnesisSection: React.FC<Props> = ({ record, onChange }) => {
           </button>
         ))}
       </div>
+      </details>
 
       {/* Row 2: Anamnese Großtextfeld */}
       <div className="mb-5">
@@ -75,7 +89,7 @@ export const AnamnesisSection: React.FC<Props> = ({ record, onChange }) => {
       </div>
 
       {/* Row 3: VE (Vorerkrankungen) und VM (Vormedikation) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs items-start">
         {/* VE */}
         <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
           <div className="flex items-center justify-between mb-2">
@@ -94,13 +108,36 @@ export const AnamnesisSection: React.FC<Props> = ({ record, onChange }) => {
               Rückseite / Beiblatt
             </button>
           </div>
-          <textarea
-            rows={2}
-            value={record.veText}
-            onChange={(e) => onChange('veText', e.target.value)}
-            placeholder="z.B. Chronische Niereninsuffizienz, Epilepsie, COPD, Herzrhythmusstörungen..."
-            className="w-full p-2.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
-          />
+          <div className="mb-2 flex flex-wrap gap-2">
+            {([
+              { value: 'keine', label: 'Keine bekannt' },
+              { value: 'unbekannt', label: 'Unbekannt' },
+              { value: 'vorhanden', label: 'Vorhanden' },
+            ] as const).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setVeStatus(option.value)}
+                aria-pressed={veStatus === option.value}
+                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                  veStatus === option.value
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          {veStatus === 'vorhanden' && (
+            <textarea
+              rows={2}
+              value={record.veText}
+              onChange={(e) => onChange('veText', e.target.value)}
+              placeholder="Vorerkrankungen eingeben..."
+              className="w-full p-2.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+            />
+          )}
         </div>
 
         {/* VM */}
@@ -121,13 +158,36 @@ export const AnamnesisSection: React.FC<Props> = ({ record, onChange }) => {
               Rückseite / Beiblatt
             </button>
           </div>
-          <textarea
-            rows={2}
-            value={record.vmText}
-            onChange={(e) => onChange('vmText', e.target.value)}
-            placeholder="Dauermedikamente (Interaktionsgefahr! z.B. Antikoagulantien, Psychopharmaka, Antihypertensiva)..."
-            className="w-full p-2.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
-          />
+          <div className="mb-2 flex flex-wrap gap-2">
+            {([
+              { value: 'keine', label: 'Keine bekannt' },
+              { value: 'unbekannt', label: 'Unbekannt' },
+              { value: 'vorhanden', label: 'Vorhanden' },
+            ] as const).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setVmStatus(option.value)}
+                aria-pressed={vmStatus === option.value}
+                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                  vmStatus === option.value
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          {vmStatus === 'vorhanden' && (
+            <textarea
+              rows={2}
+              value={record.vmText}
+              onChange={(e) => onChange('vmText', e.target.value)}
+              placeholder="Dauermedikamente etc."
+              className="w-full p-2.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+            />
+          )}
         </div>
       </div>
     </div>

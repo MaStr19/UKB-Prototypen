@@ -9,9 +9,7 @@ import { CollapsibleSection } from '../components/CollapsibleSection';
 import { SECTION_CONFIGS } from '../lib/sectionConfig';
 
 import { MetadataAndCallerSection } from '../components/sections/MetadataAndCallerSection';
-import { PatientSection } from '../components/sections/PatientSection';
 import { NoxeExposureSection } from '../components/sections/NoxeExposureSection';
-import { SubstancesTableSection } from '../components/sections/SubstancesTableSection';
 import { AnamnesisSection } from '../components/sections/AnamnesisSection';
 import { SymptomsVitalsSection } from '../components/sections/SymptomsVitalsSection';
 import { TherapiesSection } from '../components/sections/TherapiesSection';
@@ -21,9 +19,7 @@ import { CheckCircle2 } from 'lucide-react';
 
 const SECTION_KEYS = [
   'sec-metadata',
-  'sec-patient',
   'sec-noxe',
-  'sec-substanzen',
   'sec-anamnese',
   'sec-vitals',
   'sec-therapien',
@@ -236,9 +232,9 @@ export default function Home() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey && e.key >= '1' && e.key <= '9') {
+      if (e.altKey && e.key >= '1' && e.key <= '7') {
         e.preventDefault();
-        const targetId = SECTION_KEYS[parseInt(e.key, 10) - 1];
+        const targetId = SECTION_KEYS[parseInt(e.key, 8) - 1];
         const el = document.getElementById(targetId);
         if (el) {
           const yOffset = -130;
@@ -306,19 +302,7 @@ export default function Home() {
             </CollapsibleSection>
           </div>
 
-          {/* Card 2: Sektion 4: Patient & Biometrie */}
-          <div onBlur={(e) => handleSectionBlur('sec-patient', e)} tabIndex={-1} className="outline-none">
-            <CollapsibleSection
-              config={SECTION_CONFIGS['sec-patient']}
-              validation={SECTION_CONFIGS['sec-patient'].validate(record)}
-              summaryItems={SECTION_CONFIGS['sec-patient'].summarize(record)}
-              isCollapsed={collapsedMap['sec-patient']}
-              onToggle={() => toggleSection('sec-patient')}
-              onFinish={() => handleSectionFinish('sec-patient')}
-            >
-              <PatientSection record={record} onChange={handleFieldChange} />
-            </CollapsibleSection>
-          </div>
+          
 
           {/* Card 3: Sektion 5: Exposition & Modalitäten */}
           <div onBlur={(e) => handleSectionBlur('sec-noxe', e)} tabIndex={-1} className="outline-none">
@@ -334,19 +318,7 @@ export default function Home() {
             </CollapsibleSection>
           </div>
 
-          {/* Card 4: Sektion 6: 7-Row High-Density Substanztabelle */}
-          <div onBlur={(e) => handleSectionBlur('sec-substanzen', e)} tabIndex={-1} className="outline-none">
-            <CollapsibleSection
-              config={SECTION_CONFIGS['sec-substanzen']}
-              validation={SECTION_CONFIGS['sec-substanzen'].validate(record)}
-              summaryItems={SECTION_CONFIGS['sec-substanzen'].summarize(record)}
-              isCollapsed={collapsedMap['sec-substanzen']}
-              onToggle={() => toggleSection('sec-substanzen')}
-              onFinish={() => handleSectionFinish('sec-substanzen')}
-            >
-              <SubstancesTableSection record={record} onChange={handleFieldChange} />
-            </CollapsibleSection>
-          </div>
+          
 
           {/* Card 5: Sektion 7: Anamnese & VE / VM */}
           <div onBlur={(e) => handleSectionBlur('sec-anamnese', e)} tabIndex={-1} className="outline-none">

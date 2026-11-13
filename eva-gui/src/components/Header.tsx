@@ -47,14 +47,12 @@ export const Header: React.FC<HeaderProps> = ({
 
   const navItems = [
     { id: 'sec-metadata', num: '1', label: 'Kopf & Anrufer', shortcut: 'Alt+1' },
-    { id: 'sec-patient', num: '2', label: 'Patient', shortcut: 'Alt+2' },
-    { id: 'sec-noxe', num: '3', label: 'Exposition & Noxe', shortcut: 'Alt+3' },
-    { id: 'sec-substanzen', num: '4', label: 'Substanzen (7)', shortcut: 'Alt+4' },
-    { id: 'sec-anamnese', num: '5', label: 'Anamnese & VE/VM', shortcut: 'Alt+5' },
-    { id: 'sec-vitals', num: '6', label: 'Symptome & Vitals', shortcut: 'Alt+6' },
-    { id: 'sec-therapien', num: '7', label: 'Therapien & Antidote', shortcut: 'Alt+7' },
-    { id: 'sec-pss', num: '8', label: 'PSS & Prozedere', shortcut: 'Alt+8' },
-    { id: 'sec-ml-suggestions', num: '9', label: 'KI-Therapievorschläge', shortcut: 'Alt+9' },
+    { id: 'sec-noxe', num: '2', label: 'Exposition & Noxe', shortcut: 'Alt+2' },
+    { id: 'sec-anamnese', num: '3', label: 'Anamnese & VE/VM', shortcut: 'Alt+3' },
+    { id: 'sec-vitals', num: '4', label: 'Symptome & Vitals', shortcut: 'Alt+4' },
+    { id: 'sec-therapien', num: '5', label: 'Therapien & Antidote', shortcut: 'Alt+5' },
+    { id: 'sec-pss', num: '6', label: 'PSS & Prozedere', shortcut: 'Alt+6' },
+    { id: 'sec-ml-suggestions', num: '7', label: 'KI-Therapievorschläge', shortcut: 'Alt+7' },
   ];
 
   const pillTrackRef = React.useRef<HTMLDivElement>(null);
